@@ -1,0 +1,374 @@
+[
+  {
+    "combatId": "a1b2c3d4-e5f6-4g7h-8i9j-k0l1m2n3o4p5",
+    "title": "It is a Gift",
+    "effectText": "Add 1 to all dice on your Combat roll and Leader re-roll.",
+    "initiative": 3,
+    "conditions": "Play if the defending Army is in the same region as the Fellowship",
+    "side": "freePeoples",
+    "type": "combat",
+    "effects": [
+      {
+        "name": "It is a Gift",
+        "triggers": [
+          {
+            "event": "playCombatCard",
+            "conditions": {
+              "card.combatId": "a1b2c3d4-e5f6-4g7h-8i9j-k0l1m2n3o4p5",
+              "card.side": "freePeoples",
+              "battleState.defendingArmy.region": "$fellowshipRegion"
+            },
+            "actions": [
+              {
+                "type": "modifyDiceRoll",
+                "params": {
+                  "team": "$playerTeam",
+                  "rollType": "combat",
+                  "modifier": 1
+                }
+              },
+              {
+                "type": "modifyDiceRoll",
+                "params": {
+                  "team": "$playerTeam",
+                  "rollType": "leader",
+                  "modifier": 1
+                }
+              }
+            ],
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "combatId": "b2c3d4e5-f6g7-4h8i-9j0k-l1m2n3o4p5q",
+    "title": "Blade of Westernesse",
+    "effectText": "Use one hit during the Leader re-roll to eliminate one Minion of your choice that is participating in the battle.",
+    "initiative": 6,
+    "conditions": "Play if a Hobbit is in the battle",
+    "side": "freePeoples",
+    "type": "combat",
+    "effects": [
+      {
+        "name": "Blade of Westernesse",
+        "triggers": [
+          {
+            "event": "playCombatCard",
+            "conditions": {
+              "card.combatId": "b2c3d4e5-f6g7-4h8i-9j0k-l1m2n3o4p5q",
+              "card.side": "freePeoples",
+              "battleState.participants": {
+                "$contains": {
+                  "type": "companion",
+                  "subType": "hobbit"
+                }
+              }
+            },
+            "actions": [
+              {
+                "type": "addCardEffect",
+                "params": {
+                  "effect": "bladeOfWesternesse",
+                  "duration": "battle"
+                }
+              }
+            ],
+            "optional": false
+          },
+          {
+            "event": "leaderReroll",
+            "conditions": {
+              "battleState.cardEffects": {
+                "$contains": "bladeOfWesternesse"
+              },
+              "battleState.hits": { "$gte": 1 }
+            },
+            "actions": [
+              {
+                "type": "eliminateMinion",
+                "params": {
+                  "cost": 1,
+                  "targetType": "minion",
+                  "chosenBy": "$playerId"
+                }
+              }
+            ],
+            "optional": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "combatId": "c3d4e5f6-g7h8-4i9j-0k1l-m2n3o4p5q6r",
+    "title": "Mighty Attack",
+    "effectText": "Before rolling the dice for your Leader re-roll, forfeit the Leadership of one Companion participating in the battle to automatically change one missed die roll to a hit.",
+    "initiative": 4,
+    "conditions": "Play if a Companion is in the battle",
+    "side": "freePeoples",
+    "type": "combat",
+    "effects": [
+      {
+        "name": "Mighty Attack",
+        "triggers": [
+          {
+            "event": "playCombatCard",
+            "conditions": {
+              "card.combatId": "c3d4e5f6-g7h8-4i9j-0k1l-m2n3o4p5q6r",
+              "card.side": "freePeoples",
+              "battleState.participants": {
+                "$contains": {
+                  "type": "companion"
+                }
+              }
+            },
+            "actions": [
+              {
+                "type": "addCardEffect",
+                "params": {
+                  "effect": "mightyAttack",
+                  "duration": "battle"
+                }
+              }
+            ],
+            "optional": false
+          },
+          {
+            "event": "beforeLeaderReroll",
+            "conditions": {
+              "battleState.cardEffects": {
+                "$contains": "mightyAttack"
+              }
+            },
+            "actions": [
+              {
+                "type": "forfeitLeadership",
+                "params": {
+                  "characterType": "companion",
+                  "chosenBy": "$playerId",
+                  "effect": {
+                    "type": "convertMissToHit",
+                    "count": 1
+                  }
+                }
+              }
+            ],
+            "optional": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "combatId": "d4e5f6g7-h8i9-4j0k-1l2m-n3o4p5q6r7s",
+    "title": "Servant of the Secret Fire",
+    "effectText": "Add 1 to all dice on your Combat roll.",
+    "initiative": 3,
+    "conditions": "Play if Gandalf is in the battle",
+    "side": "freePeoples",
+    "type": "combat",
+    "effects": [
+      {
+        "name": "Servant of the Secret Fire",
+        "triggers": [
+          {
+            "event": "playCombatCard",
+            "conditions": {
+              "card.combatId": "d4e5f6g7-h8i9-4j0k-1l2m-n3o4p5q6r7s",
+              "card.side": "freePeoples",
+              "battleState.participants": {
+                "$contains": {
+                  "$or": [
+                    { "id": "gandalf_grey" },
+                    { "id": "gandalf_white" }
+                  ]
+                }
+              }
+            },
+            "actions": [
+              {
+                "type": "modifyDiceRoll",
+                "params": {
+                  "team": "$playerTeam",
+                  "rollType": "combat",
+                  "modifier": 1
+                }
+              }
+            ],
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "combatId": "e5f6g7h8-i9j0-4k1l-2m3n-o4p5q6r7s8t",
+    "title": "Andúril",
+    "effectText": "Before rolling the dice for your Leader re-roll, forfeit Strider's Leadership to automatically change one missed die roll to a hit, or forfeit Aragorn's Leadership to automatically change up to two missed die rolls to hits.",
+    "initiative": 4,
+    "conditions": "Play if Strider/Aragorn is in the battle",
+    "side": "freePeoples",
+    "type": "combat",
+    "effects": [
+      {
+        "name": "Andúril",
+        "triggers": [
+          {
+            "event": "playCombatCard",
+            "conditions": {
+              "card.combatId": "e5f6g7h8-i9j0-4k1l-2m3n-o4p5q6r7s8t",
+              "card.side": "freePeoples",
+              "battleState.participants": {
+                "$contains": {
+                  "$or": [
+                    { "id": "strider" },
+                    { "id": "aragorn" }
+                  ]
+                }
+              }
+            },
+            "actions": [
+              {
+                "type": "addCardEffect",
+                "params": {
+                  "effect": "anduril",
+                  "duration": "battle"
+                }
+              }
+            ],
+            "optional": false
+          },
+          {
+            "event": "beforeLeaderReroll",
+            "conditions": {
+              "battleState.cardEffects": {
+                "$contains": "anduril"
+              },
+              "battleState.participants": {
+                "$contains": { "id": "strider" }
+              }
+            },
+            "actions": [
+              {
+                "type": "forfeitLeadership",
+                "params": {
+                  "characterId": "strider",
+                  "effect": {
+                    "type": "convertMissToHit",
+                    "count": 1
+                  }
+                }
+              }
+            ],
+            "optional": true
+          },
+          {
+            "event": "beforeLeaderReroll",
+            "conditions": {
+              "battleState.cardEffects": {
+                "$contains": "anduril"
+              },
+              "battleState.participants": {
+                "$contains": { "id": "aragorn" }
+              }
+            },
+            "actions": [
+              {
+                "type": "forfeitLeadership",
+                "params": {
+                  "characterId": "aragorn",
+                  "effect": {
+                    "type": "convertMissToHit",
+                    "count": 2
+                  }
+                }
+              }
+            ],
+            "optional": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "combatId": "f6g7h8i9-j0k1-4l2m-3n4o-p5q6r7s8t9u",
+    "title": "Heroic Death",
+    "effectText": "Before you remove casualties inflicted by your opponent's Combat roll and Leader re-roll, you may eliminate one of your Leaders to cancel one hit, or eliminate one Companion to cancel a number of hits equal to or less than the Companion's Level.",
+    "initiative": 6,
+    "conditions": null,
+    "side": "freePeoples",
+    "type": "combat",
+    "effects": [
+      {
+        "name": "Heroic Death",
+        "triggers": [
+          {
+            "event": "playCombatCard",
+            "conditions": {
+              "card.combatId": "f6g7h8i9-j0k1-4l2m-3n4o-p5q6r7s8t9u",
+              "card.side": "freePeoples"
+            },
+            "actions": [
+              {
+                "type": "addCardEffect",
+                "params": {
+                  "effect": "heroicDeath",
+                  "duration": "battle"
+                }
+              }
+            ],
+            "optional": false
+          },
+          {
+            "event": "beforeCasualties",
+            "conditions": {
+              "battleState.cardEffects": {
+                "$contains": "heroicDeath"
+              },
+              "battleState.hits.opponent": { "$gte": 1 }
+            },
+            "actions": [
+              {
+                "type": "sacrificeCharacter",
+                "params": {
+                  "characterType": "leader",
+                  "chosenBy": "$playerId",
+                  "effect": {
+                    "type": "cancelHits",
+                    "count": 1
+                  }
+                }
+              }
+            ],
+            "optional": true
+          },
+          {
+            "event": "beforeCasualties",
+            "conditions": {
+              "battleState.cardEffects": {
+                "$contains": "heroicDeath"
+              },
+              "battleState.hits.opponent": { "$gte": 1 }
+            },
+            "actions": [
+              {
+                "type": "sacrificeCharacter",
+                "params": {
+                  "characterType": "companion",
+                  "chosenBy": "$playerId",
+                  "effect": {
+                    "type": "cancelHits",
+                    "count": "$character.level"
+                  }
+                }
+              }
+            ],
+            "optional": true
+          }
+        ]
+      }
+    ]
+  }
+]

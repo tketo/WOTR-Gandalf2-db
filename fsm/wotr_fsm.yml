@@ -1,0 +1,1588 @@
+game: war_of_the_ring
+version: 0.1.0
+
+config:
+  hand_limit: 6
+  initial_state: SETUP_GAME_OPTIONS
+
+prompts:
+  SETUP_GAME_OPTIONS_PROMPT: "⚙️ Turn 0 — Setup: Choose expansions (LOME, WOME), Treebeard, and number of players (1–4)."
+  SETUP_SOLO_SIDE_SELECTION_PROMPT: "🎮 Solo game: choose whether to play the Free Peoples or the Shadow."
+  SETUP_CONNECTION_MODE_PROMPT: "🌐 Multiplayer setup: host a new game or join an existing host."
+  SETUP_CLIENT_CONNECT_PROMPT: "🔌 Enter host information to join the game."
+  SETUP_LOBBY_HOST_PROMPT: "🛡️ Host Lobby: manage game options and wait for all players to join."
+  SETUP_LOBBY_CLIENT_PROMPT: "👥 Client Lobby: waiting for host to finalize game options and move to side assignment."
+  SETUP_SIDE_ASSIGNMENT_PROMPT: "⚔️ Side Assignment: assign players to Free Peoples and Shadow seats. All must be ready before starting."
+  GAME_INITIALIZATION_PROMPT: "🎲 Initializing game... Setting up board, placing pieces, and preparing Turn 1."
+
+  PHASE_1_START: "🌅 Turn {{turn}} — Phase 1: Recover Dice & Draw Cards"
+  PHASE_1_COMPLETE: "✅ Phase 1 complete."
+  PHASE_2_START: "🌍 Turn {{turn}} — Phase 2: Fellowship Phase"
+  PHASE_2_OPTIONS: "Fellowship actions available: Declare (reveal position, stays hidden), Heal (if in FP City/Stronghold), Activate Nation, Change Guide, or Skip."
+  PHASE_2_FELLOWSHIP_DECLARED: "📍 Fellowship revealed at {{location}}."
+  PHASE_2_FELLOWSHIP_HEALED: "💚 Ring-bearer healed if in Stronghold or City: Corruption reduced by 1 (now {{corruption}}/12)."
+  PHASE_2_NATION_ACTIVATED: "⚔️ Nation activated: {{nation}} is now Active."
+  PHASE_2_GUIDE_CHANGED: "👤 Guide changed to {{companion}}."
+  PHASE_2_COMPLETE: "⏭️ Fellowship Phase complete."
+  PHASE_3_START: "🎯 Turn {{turn}} — Phase 3: Hunt Allocation"
+  PHASE_3_COMPLETE: "🎲 Hunt Dice allocated: {{hunt_dice}}"
+  PHASE_4_START: "🎲 Turn {{turn}} — Phase 4: Action Roll"
+  PHASE_4_COMPLETE: "🧮 Action Dice results locked. Proceeding to Phase 5 — Action Resolution."
+  PHASE_5_START: "⚔️ Turn {{turn}} — Phase 5: Action Resolution begins."
+  PHASE_5_FP_TO_ACT: "🟦 Phase 5: Free Peoples to act. Drag an Action Die to the selected area to use it..."
+  PHASE_5_SP_TO_ACT: "🟥 Phase 5: Shadow to act. Drag an Action Die to the selected area to use it..."
+  PHASE_5_DIE_SELECTED: "🎲 {{faction}} selected {{die_type}} die. Choose an action..."
+  PHASE_5_WILL_OF_WEST: "✨ Will of the West! You may change this die to any face."
+  PHASE_5_ELVEN_RING_AVAILABLE: "💍 Elven Ring available: {{ring_name}}. Use it to re-roll this die."
+  PHASE_5_ELVEN_RING_USED_FP: "💍 {{ring_name}} used! Ring moved to Shadow control."
+  PHASE_5_ELVEN_RING_USED_SP: "💍 {{ring_name}} captured! Ring moved to casualties."
+  PHASE_5_COMPLETE: "🏁 All Action Dice used. Proceeding to Phase 6 — Victory Check."
+  PHASE_6_START: "🏆 Phase 6 — Victory Check. Evaluating military and ring victory conditions..."
+  NO_VICTORY_START_NEXT_TURN: "🔁 No victory detected. Starting next turn."
+  HUNT_START: "🌑 Hunt triggered: The Fellowship has moved."
+  HUNT_ROLL: "🎲 Hunt Roll — waiting for SHADOW..."
+  HUNT_NO_SUCCESS: "🍃 No Hunt successes. The Fellowship remains Hidden."
+  HUNT_COMPLETE: "🌑 Hunt Resolution complete. Returning to Phase 5 — Alternating Player Actions."
+  COMBAT_START: "⚔️ Combat started in {{region}}. Attacker: {{attacker}}, Defender: {{defender}}."
+  COMBAT_END_SUMMARY: "🏁 Combat ended in {{region}}."
+  GAME_OVER_SHADOW_RING: "💀 Corruption has reached 12. Shadow wins by Ring-corruption victory."
+  GAME_OVER_FP_RING: "🔥 The Fellowship has reached the Crack of Doom. The Ring is destroyed. Free Peoples win!"
+  GAME_OVER_SHADOW_MILITARY: "🏰 Shadow wins by military victory (10 VP)."
+  GAME_OVER_FP_MILITARY: "🕊️ Free Peoples wins by military victory (4 VP)."
+
+modules:
+  - id: CORE_TURN
+    label: "Core Turn Phases"
+    type: phase_group
+    phases:
+      - id: TURN_0_SETUP
+        label: "Turn 0 — Setup"
+        order: 0
+        states:
+
+          # 0.1 — Game Options (expansions, Treebeard) and Side Selection
+          - id: SETUP_GAME_OPTIONS
+            kind: normal
+            label: "Game Options & Side Selection"
+            description: >
+              Choose game options: toggle expansions (LOME, WOME) and the Treebeard feature.
+              BASE is always enabled. Only the host (first client) may modify expansions.
+              Players claim sides by viewing them (viewfp for Free Peoples, viewsa for Shadow).
+              Sides can be password protected.
+            ui:
+              on_enter_prompt_id: SETUP_GAME_OPTIONS_PROMPT
+            entry_actions:
+              - PROMPT_SETUP_GAME_OPTIONS
+            exit_actions: []
+            transitions:
+              # In-place game option changes (host only)
+              - event: TOGGLE_LOME
+                target: SETUP_GAME_OPTIONS
+                description: "Toggle the Lords of Middle-earth expansion."
+                guard: null
+                actions: []
+              - event: TOGGLE_WOME
+                target: SETUP_GAME_OPTIONS
+                description: "Toggle the Warriors of Middle-earth expansion."
+                guard: null
+                actions: []
+              - event: TOGGLE_TREEBEARD
+                target: SETUP_GAME_OPTIONS
+                description: "Toggle the Treebeard optional feature."
+                guard: null
+                actions: []
+              # Side selection via viewing
+              - event: VIEW_FP
+                target: SETUP_GAME_OPTIONS
+                description: "Player views Free Peoples hand, claiming that side."
+                guard: null
+                actions:
+                  - ASSIGN_PLAYER_TO_FP
+              - event: VIEW_SA
+                target: SETUP_GAME_OPTIONS
+                description: "Player views Shadow hand, claiming that side."
+                guard: null
+                actions:
+                  - ASSIGN_PLAYER_TO_SHADOW
+              # Start game when ready
+              - event: GAME_OPTIONS_CONFIRMED
+                target: PROMPT_GAME_INITIALIZATION
+                description: "Start game initialization."
+                guard: null
+                actions: []
+
+          # 0.2 — Solo: side selection (bypass networking)
+          - id: SETUP_SOLO_SIDE_SELECTION
+            kind: normal
+            label: "Solo Side Selection"
+            description: >
+              In a 1-player game, choose whether the local player controls the Free Peoples or the Shadow.
+            ui:
+              on_enter_prompt_id: SETUP_SOLO_SIDE_SELECTION_PROMPT
+            entry_actions:
+              - PROMPT_SETUP_SOLO_SIDE_SELECTION
+            exit_actions: []
+            transitions:
+              - event: SOLO_CHOOSE_FP
+                target: PROMPT_GAME_INITIALIZATION
+                description: "Solo player controls Free Peoples."
+                guard: null
+                actions:
+                  - ASSIGN_SOLO_PLAYER_TO_FP
+              - event: SOLO_CHOOSE_SHADOW
+                target: PROMPT_GAME_INITIALIZATION
+                description: "Solo player controls Shadow."
+                guard: null
+                actions:
+                  - ASSIGN_SOLO_PLAYER_TO_SHADOW
+              - event: BACK_TO_GAME_OPTIONS
+                target: SETUP_GAME_OPTIONS
+                description: "Return to Game Options."
+                guard: null
+                actions: []
+
+          # 0.3 — Multiplayer: Host or Join
+          - id: SETUP_CONNECTION_MODE
+            kind: normal
+            label: "Connection Mode"
+            description: >
+              Choose whether to host a new multiplayer game or connect to an existing one.
+            ui:
+              on_enter_prompt_id: SETUP_CONNECTION_MODE_PROMPT
+            entry_actions:
+              - PROMPT_SETUP_CONNECTION_MODE
+            exit_actions: []
+            transitions:
+              - event: LOCAL_HOST_CREATE_GAME
+                target: SETUP_LOBBY_HOST
+                description: "Local client becomes the host."
+                guard: null
+                actions: []
+              - event: LOCAL_JOIN_GAME
+                target: SETUP_CLIENT_CONNECT
+                description: "Local client attempts to join an existing host."
+                guard: null
+                actions: []
+              - event: BACK_TO_GAME_OPTIONS
+                target: SETUP_GAME_OPTIONS
+                description: "Return to Game Options."
+                guard: null
+                actions: []
+
+          # 0.4 — Client connection details
+          - id: SETUP_CLIENT_CONNECT
+            kind: normal
+            label: "Join Game"
+            description: >
+              Enter host connection info and join the multiplayer lobby.
+            ui:
+              on_enter_prompt_id: SETUP_CLIENT_CONNECT_PROMPT
+            entry_actions:
+              - PROMPT_SETUP_CLIENT_CONNECT
+            exit_actions: []
+            transitions:
+              - event: CLIENT_CONNECT_ATTEMPT
+                target: SETUP_CLIENT_CONNECT
+                description: "Attempt to connect to the host."
+                guard: null
+                actions: []
+              - event: CLIENT_CONNECT_SUCCESS
+                target: SETUP_LOBBY_CLIENT
+                description: "Connected → enter lobby."
+                guard: null
+                actions: []
+              - event: CLIENT_CONNECT_FAILED
+                target: SETUP_CLIENT_CONNECT
+                description: "Connection failed; stay on connect screen."
+                guard: null
+                actions: []
+              - event: CLIENT_CANCEL_CONNECT
+                target: SETUP_CONNECTION_MODE
+                description: "Cancel joining and return to Connection Mode."
+                guard: null
+                actions: []
+
+          # 0.5 — Host Lobby (host manages options, waits for players)
+          - id: SETUP_LOBBY_HOST
+            kind: normal
+            label: "Host Lobby"
+            description: >
+              Host manages game options (LOME, WOME, Treebeard, player count) and waits
+              for all players to join and ready up before side assignment.
+            ui:
+              on_enter_prompt_id: SETUP_LOBBY_HOST_PROMPT
+            entry_actions:
+              - PROMPT_SETUP_LOBBY_HOST
+            exit_actions: []
+            transitions:
+              # Host can modify game options
+              - event: TOGGLE_LOME
+                target: SETUP_LOBBY_HOST
+                description: "Toggle Lords of Middle-earth expansion."
+                guard: null
+                actions: []
+              - event: TOGGLE_WOME
+                target: SETUP_LOBBY_HOST
+                description: "Toggle Warriors of Middle-earth expansion."
+                guard: null
+                actions: []
+              - event: TOGGLE_TREEBEARD
+                target: SETUP_LOBBY_HOST
+                description: "Toggle Treebeard feature."
+                guard: null
+                actions: []
+              - event: SET_PLAYER_COUNT
+                target: SETUP_LOBBY_HOST
+                description: "Update player count (2-4)."
+                guard: null
+                actions: []
+              # Player ready status
+              - event: PLAYER_READY
+                target: SETUP_LOBBY_HOST
+                description: "Update this player's ready status to ready."
+                guard: null
+                actions: []
+              - event: PLAYER_NOT_READY
+                target: SETUP_LOBBY_HOST
+                description: "Update this player's ready status to not ready."
+                guard: null
+                actions: []
+              # Proceed to side assignment
+              - event: HOST_OPEN_SIDE_ASSIGNMENT
+                target: SETUP_SIDE_ASSIGNMENT
+                description: "Move to side assignment."
+                guard: null
+                actions: []
+
+          # 0.6 — Client Lobby (view-only options, ready toggle)
+          - id: SETUP_LOBBY_CLIENT
+            kind: normal
+            label: "Client Lobby"
+            description: >
+              Client views the host's game options and waits until the host moves
+              everyone into side assignment.
+            ui:
+              on_enter_prompt_id: SETUP_LOBBY_CLIENT_PROMPT
+            entry_actions:
+              - PROMPT_SETUP_LOBBY_CLIENT
+            exit_actions: []
+            transitions:
+              - event: PLAYER_READY
+                target: SETUP_LOBBY_CLIENT
+                description: "Client marks themselves as ready."
+                guard: null
+                actions: []
+              - event: PLAYER_NOT_READY
+                target: SETUP_LOBBY_CLIENT
+                description: "Client marks themselves as not ready."
+                guard: null
+                actions: []
+              - event: HOST_OPEN_SIDE_ASSIGNMENT
+                target: SETUP_SIDE_ASSIGNMENT
+                description: "Host advanced to side assignment."
+                guard: null
+                actions: []
+
+          # 0.7 — Side Assignment
+          - id: SETUP_SIDE_ASSIGNMENT
+            kind: normal
+            label: "Side Assignment"
+            description: >
+              Assign players to Free Peoples and Shadow seats. All players must be ready
+              before the host starts the game.
+            ui:
+              on_enter_prompt_id: SETUP_SIDE_ASSIGNMENT_PROMPT
+            entry_actions:
+              - PROMPT_SETUP_SIDE_ASSIGNMENT
+            exit_actions: []
+            transitions:
+              - event: ASSIGN_PLAYER_TO_SIDE
+                target: SETUP_SIDE_ASSIGNMENT
+                description: "Assign a player to a Free Peoples or Shadow seat."
+                guard: null
+                actions: []
+              - event: UNASSIGN_PLAYER_FROM_SIDE
+                target: SETUP_SIDE_ASSIGNMENT
+                description: "Unassign a player from their current seat."
+                guard: null
+                actions: []
+              - event: PLAYER_READY
+                target: SETUP_SIDE_ASSIGNMENT
+                description: "Update this player's ready status to ready."
+                guard: null
+                actions: []
+              - event: PLAYER_NOT_READY
+                target: SETUP_SIDE_ASSIGNMENT
+                description: "Update this player's ready status to not ready."
+                guard: null
+                actions: []
+              - event: HOST_START_GAME
+                target: PROMPT_GAME_INITIALIZATION
+                description: "Host starts the game - initialize game state with side assignments."
+                guard: "allPlayersReady"
+                actions: []
+
+          # 0.8 — Game Initialization (granular states)
+          - id: PROMPT_GAME_INITIALIZATION
+            kind: normal
+            label: "Prompt Game Initialization"
+            description: "Display initialization message to players."
+            ui:
+              on_enter_prompt_id: GAME_INITIALIZATION_PROMPT
+            entry_actions:
+              - PROMPT_GAME_INITIALIZATION
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: VALIDATE_SIDE_ASSIGNMENTS
+                description: "Begin validation."
+                guard: null
+                actions: []
+
+          - id: VALIDATE_SIDE_ASSIGNMENTS
+            kind: normal
+            label: "Validate Side Assignments"
+            description: "Ensure all players have valid faction assignments."
+            ui: {}
+            entry_actions:
+              - VALIDATE_SIDE_ASSIGNMENTS
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PERSIST_PLAYER_FACTION_ASSIGNMENTS
+                description: "Proceed to persist assignments."
+                guard: null
+                actions: []
+
+          - id: PERSIST_PLAYER_FACTION_ASSIGNMENTS
+            kind: normal
+            label: "Persist Player Faction Assignments"
+            description: "Save player-to-faction assignments to database."
+            ui: {}
+            entry_actions:
+              - PERSIST_PLAYER_FACTION_ASSIGNMENTS
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: INITIALIZE_FP_RESOURCES
+                description: "Initialize Free Peoples resources."
+                guard: null
+                actions: []
+
+          - id: INITIALIZE_FP_RESOURCES
+            kind: normal
+            label: "Initialize FP Resources"
+            description: "Set up Free Peoples cards, dice, and starting resources."
+            ui: {}
+            entry_actions:
+              - INITIALIZE_FP_RESOURCES
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: INITIALIZE_SP_RESOURCES
+                description: "Initialize Shadow resources."
+                guard: null
+                actions: []
+
+          - id: INITIALIZE_SP_RESOURCES
+            kind: normal
+            label: "Initialize SP Resources"
+            description: "Set up Shadow cards, dice, and starting resources."
+            ui: {}
+            entry_actions:
+              - INITIALIZE_SP_RESOURCES
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: SETUP_INITIAL_BOARD_STATE
+                description: "Set up board state."
+                guard: null
+                actions: []
+
+          - id: SETUP_INITIAL_BOARD_STATE
+            kind: normal
+            label: "Setup Initial Board State"
+            description: "Initialize regions, political tracks, and game state."
+            ui: {}
+            entry_actions:
+              - SETUP_INITIAL_BOARD_STATE
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PLACE_INITIAL_PIECES
+                description: "Place pieces on board."
+                guard: null
+                actions: []
+
+          - id: PLACE_INITIAL_PIECES
+            kind: normal
+            label: "Place Initial Pieces"
+            description: "Place all starting units, characters, and Fellowship on the board."
+            ui: {}
+            entry_actions:
+              - PLACE_INITIAL_PIECES
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: INITIALIZATION_COMPLETE
+                description: "Complete initialization."
+                guard: null
+                actions: []
+
+          - id: INITIALIZATION_COMPLETE
+            kind: normal
+            label: "Initialization Complete"
+            description: "Game initialization complete, ready to start Turn 1."
+            ui: {}
+            entry_actions:
+              - INITIALIZATION_COMPLETE
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: TURN_START
+                description: "Game initialized, proceed to Turn 1."
+                guard: null
+                actions: []
+
+      # ======================================================
+      # TURN META & END STATES (now order 1)
+      # ======================================================
+      - id: TURN_META
+        label: "Turn Meta & End States"
+        order: 1
+        states:
+          - id: TURN_START
+            kind: normal
+            label: "Turn Start"
+            description: "Entry point for each game turn."
+            ui: {}
+            entry_actions:
+              - INCREMENT_TURN_COUNTER
+              - RESET_PHASE_TRACKER
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_1_RECOVER_AND_DRAW
+                description: "Begin Phase 1 immediately."
+                guard: null
+                actions: []
+
+          - id: NO_VICTORY_NEXT_TURN
+            kind: normal
+            label: "No Victory - Next Turn"
+            description: "No victory detected; start next turn."
+            ui:
+              on_enter_prompt_id: NO_VICTORY_START_NEXT_TURN
+            entry_actions:
+              - PROMPT_NO_VICTORY_START_NEXT_TURN
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: TURN_START
+                description: "Loop back to start of turn."
+                guard: null
+                actions: []
+
+          - id: GAME_END_SHADOW_RING
+            kind: final
+            label: "Shadow Wins by Ring Corruption"
+            description: "Shadow wins by Ring-corruption."
+            ui:
+              on_enter_prompt_id: GAME_OVER_SHADOW_RING
+            entry_actions:
+              - PROMPT_GAME_OVER_SHADOW_RING
+            exit_actions: []
+            transitions: []
+
+          - id: GAME_END_FP_RING
+            kind: final
+            label: "Free Peoples Wins by Ring Destruction"
+            description: "Free Peoples wins by destroying the Ring."
+            ui:
+              on_enter_prompt_id: GAME_OVER_FP_RING
+            entry_actions:
+              - PROMPT_GAME_OVER_FP_RING
+            exit_actions: []
+            transitions: []
+
+          - id: GAME_END_SHADOW_MILITARY
+            kind: final
+            label: "Shadow Wins by Military Victory"
+            description: "Shadow wins by military victory."
+            ui:
+              on_enter_prompt_id: GAME_OVER_SHADOW_MILITARY
+            entry_actions:
+              - PROMPT_GAME_OVER_SHADOW_MILITARY
+            exit_actions: []
+            transitions: []
+
+          - id: GAME_END_FP_MILITARY
+            kind: final
+            label: "Free Peoples Wins by Military Victory"
+            description: "Free Peoples wins by military victory."
+            ui:
+              on_enter_prompt_id: GAME_OVER_FP_MILITARY
+            entry_actions:
+              - PROMPT_GAME_OVER_FP_MILITARY
+            exit_actions: []
+            transitions: []
+
+      - id: PHASE_1
+        label: "Phase 1 — Recover Dice & Draw Cards"
+        order: 2
+        states:
+          - id: PHASE_1_RECOVER_AND_DRAW
+            kind: normal
+            label: "Recover & Draw"
+            description: "Recover action dice and draw cards."
+            ui:
+              on_enter_prompt_id: PHASE_1_START
+            entry_actions:
+              - PROMPT_PHASE_1_START
+              - RECOVER_ALL_FP_ACTION_DICE
+              - RECOVER_ALL_SP_ACTION_DICE
+              - FP_DRAW_CHARACTER_CARD
+              - FP_DRAW_STRATEGY_CARD
+              - SP_DRAW_CHARACTER_CARD
+              - SP_DRAW_STRATEGY_CARD
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_1_FP_DISCARD_CHECK
+                description: "Proceed to FP hand limit check."
+                guard: null
+                actions: []
+
+          - id: PHASE_1_FP_DISCARD_CHECK
+            kind: normal
+            label: "FP Hand Limit Check"
+            description: "Check FP hand size and discard if needed."
+            ui: {}
+            entry_actions:
+              - IF_FP_HAND_SIZE_GT_HAND_LIMIT_PROMPT_DISCARD
+            exit_actions: []
+            transitions:
+              - event: FP_DISCARDS_DONE
+                target: PHASE_1_SP_DISCARD_CHECK
+                description: "FP has discarded down to limit."
+                guard: null
+                actions: []
+              - event: AUTO
+                target: PHASE_1_SP_DISCARD_CHECK
+                description: "No discard needed."
+                guard: "FP_HAND_SIZE <= HAND_LIMIT"
+                actions: []
+
+          - id: PHASE_1_SP_DISCARD_CHECK
+            kind: normal
+            label: "SP Hand Limit Check"
+            description: "Check SP hand size and discard if needed."
+            ui: {}
+            entry_actions:
+              - IF_SP_HAND_SIZE_GT_HAND_LIMIT_PROMPT_DISCARD
+            exit_actions: []
+            transitions:
+              - event: SP_DISCARDS_DONE
+                target: PHASE_1_END
+                description: "SP has discarded down to limit."
+                guard: null
+                actions: []
+              - event: AUTO
+                target: PHASE_1_END
+                description: "No discard needed."
+                guard: "SP_HAND_SIZE <= HAND_LIMIT"
+                actions: []
+
+          - id: PHASE_1_END
+            kind: normal
+            label: "Phase 1 Complete"
+            description: "End of Phase 1."
+            ui:
+              on_enter_prompt_id: PHASE_1_COMPLETE
+            entry_actions:
+              - PROMPT_PHASE_1_COMPLETE
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_2_FELLOWSHIP_START
+                description: "Proceed to Phase 2."
+                guard: null
+                actions: []
+
+      - id: PHASE_2
+        label: "Phase 2 — Fellowship Phase"
+        order: 3
+        states:
+          - id: PHASE_2_FELLOWSHIP_START
+            kind: normal
+            label: "Fellowship Phase Start"
+            description: "FP may declare Fellowship, heal, activate nation, change Guide, etc."
+            ui:
+              on_enter_prompt_id: PHASE_2_START
+            entry_actions:
+              - PROMPT_PHASE_2_START
+              - SHOW_FELLOWSHIP_STATUS
+              - CHECK_FELLOWSHIP_OPTIONS
+            exit_actions: []
+            transitions:
+              - event: FP_DECLARE_FELLOWSHIP
+                target: PHASE_2_FELLOWSHIP_START
+                description: "Reveal Fellowship position."
+                guard: FELLOWSHIP_IS_HIDDEN
+                actions:
+                  - DECLARE_FELLOWSHIP_POSITION
+                  - PROMPT_PHASE_2_FELLOWSHIP_DECLARED
+
+              - event: FP_HEAL_RINGBEARER
+                target: PHASE_2_FELLOWSHIP_START
+                description: "Heal Ring-bearer (remove 1 Corruption)."
+                guard: CAN_HEAL_RINGBEARER
+                actions:
+                  - REDUCE_CORRUPTION_BY_ONE
+                  - PROMPT_PHASE_2_FELLOWSHIP_HEALED
+
+              - event: FP_ACTIVATE_NATION
+                target: PHASE_2_FELLOWSHIP_START
+                description: "Activate Nation (if declared in its City/Stronghold)."
+                guard: CAN_ACTIVATE_NATION
+                actions:
+                  - ACTIVATE_NATION_AT_FELLOWSHIP
+                  - PROMPT_PHASE_2_NATION_ACTIVATED
+
+              - event: FP_CHANGE_GUIDE
+                target: PHASE_2_FELLOWSHIP_START
+                description: "Change Fellowship Guide to Companion of equal level."
+                guard: HAS_VALID_GUIDE_OPTIONS
+                actions:
+                  - PROMPT_SELECT_NEW_GUIDE
+
+              - event: GUIDE_SELECTED
+                target: PHASE_2_FELLOWSHIP_START
+                description: "Guide changed."
+                guard: null
+                actions:
+                  - CHANGE_FELLOWSHIP_GUIDE
+                  - PROMPT_PHASE_2_GUIDE_CHANGED
+
+              - event: FP_FELLOWSHIP_DECISIONS_READY
+                target: PHASE_2_END
+                description: "FP done with Fellowship actions."
+                guard: null
+                actions: []
+
+          - id: PHASE_2_END
+            kind: normal
+            label: "Phase 2 Complete"
+            description: "End of Fellowship Phase."
+            ui:
+              on_enter_prompt_id: PHASE_2_COMPLETE
+            entry_actions:
+              - PROMPT_PHASE_2_COMPLETE
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_3_HUNT_ALLOCATION_START
+                description: "Proceed to Phase 3."
+                guard: null
+                actions: []
+
+      - id: PHASE_3
+        label: "Phase 3 — Hunt Allocation"
+        order: 4
+        states:
+          - id: PHASE_3_HUNT_ALLOCATION_START
+            kind: normal
+            label: "Hunt Allocation Start"
+            description: "Shadow allocates Eyes as Hunt dice."
+            ui:
+              on_enter_prompt_id: PHASE_3_START
+            entry_actions:
+              - PROMPT_PHASE_3_START
+              - PROMPT_SP_ALLOCATE_HUNT_DICE
+            exit_actions: []
+            transitions:
+              - event: SP_HUNT_ALLOCATION_DONE
+                target: PHASE_3_END
+                description: "Shadow finished allocating Hunt Dice."
+                guard: null
+                actions: []
+
+          - id: PHASE_3_END
+            kind: normal
+            label: "Phase 3 Complete"
+            description: "End of Hunt Allocation."
+            ui:
+              on_enter_prompt_id: PHASE_3_COMPLETE
+            entry_actions:
+              - PROMPT_PHASE_3_COMPLETE
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_4_ACTION_ROLL_START
+                description: "Proceed to Phase 4."
+                guard: null
+                actions: []
+
+      - id: PHASE_4
+        label: "Phase 4 — Action Roll"
+        order: 5
+        states:
+          - id: PHASE_4_ACTION_ROLL_START
+            kind: normal
+            label: "Action Roll Start"
+            description: "Both players roll action dice."
+            ui:
+              on_enter_prompt_id: PHASE_4_START
+            entry_actions:
+              - PROMPT_PHASE_4_START
+              - ROLL_FP_ACTION_DICE
+              - ROLL_SP_ACTION_DICE
+              - MOVE_ALL_EYE_RESULTS_TO_HUNT_BOX
+              - APPLY_ELVEN_RING_EFFECTS_IF_ANY
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_4_END
+                description: "Action dice rolled and processed."
+                guard: null
+                actions: []
+
+          - id: PHASE_4_END
+            kind: normal
+            label: "Phase 4 Complete"
+            description: "End of Action Roll."
+            ui:
+              on_enter_prompt_id: PHASE_4_COMPLETE
+            entry_actions:
+              - PROMPT_PHASE_4_COMPLETE
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_5_ACTION_RESOLUTION_START
+                description: "Proceed to Phase 5."
+                guard: null
+                actions: []
+
+      - id: PHASE_5
+        label: "Phase 5 — Action Resolution"
+        order: 6
+        states:
+          - id: PHASE_5_ACTION_RESOLUTION_START
+            kind: normal
+            label: "Phase 5 Start"
+            description: "Initialize alternating action resolution."
+            ui:
+              on_enter_prompt_id: PHASE_5_START
+            entry_actions:
+              - INIT_ACTION_TURN_ORDER_FP_FIRST
+              - PROMPT_PHASE_5_START
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_5_FP_ACTION
+                description: "FP acts first."
+                guard: null
+                actions: []
+
+          - id: PHASE_5_FP_ACTION
+            kind: normal
+            label: "FP Action"
+            description: "Free Peoples drags an Action Die to area 152 (selected) or passes."
+            ui:
+              on_enter_prompt_id: PHASE_5_FP_TO_ACT
+            entry_actions:
+              - PROMPT_PHASE_5_FP_TO_ACT
+              - SHOW_FP_DICE_POOL
+            exit_actions: []
+            transitions:
+              - event: PIECE_MOVED
+                target: PHASE_5_FP_DIE_SELECTED
+                description: "FP moved a die to area 152 (selected)."
+                guard: PIECE_IS_FP_DIE_TO_AREA_152
+                actions:
+                  - RECORD_SELECTED_DIE
+                  - PROMPT_PHASE_5_DIE_SELECTED
+              - event: FP_PASSES
+                target: PHASE_5_AFTER_FP_PASS
+                description: "FP passes."
+                guard: null
+                actions: []
+
+          - id: PHASE_5_FP_DIE_SELECTED
+            kind: normal
+            label: "FP Die Selected"
+            description: "FP has selected a die; determine available actions based on die face."
+            ui: {}
+            entry_actions:
+              - CHECK_IF_WILL_OF_WEST
+              - CHECK_ELVEN_RINGS_AVAILABLE
+              - DETERMINE_DIE_ACTIONS
+            exit_actions: []
+            transitions:
+              - event: CHANGE_DIE_FACE
+                target: PHASE_5_FP_DIE_SELECTED
+                description: "Will of the West: Change die to any face."
+                guard: IS_WILL_OF_WEST_DIE
+                actions:
+                  - CHANGE_DIE_TO_SELECTED_FACE
+                  - DETERMINE_DIE_ACTIONS
+
+              - event: USE_ELVEN_RING
+                target: PHASE_5_FP_DIE_SELECTED
+                description: "Use Elven Ring to re-roll die."
+                guard: HAS_AVAILABLE_ELVEN_RING
+                actions:
+                  - MOVE_ELVEN_RING_TO_SHADOW_CONTROL
+                  - REROLL_SELECTED_DIE
+                  - PROMPT_ELVEN_RING_USED_FP
+                  - DETERMINE_DIE_ACTIONS
+
+              - event: ACTION_SELECTED
+                target: PHASE_5_RESOLVE_ACTION_FP
+                description: "FP chose an action for this die."
+                guard: null
+                actions:
+                  - RECORD_ACTION_CHOICE
+
+          - id: PHASE_5_SP_ACTION
+            kind: normal
+            label: "SP Action"
+            description: "Shadow drags an Action Die to area 152 (selected) or passes."
+            ui:
+              on_enter_prompt_id: PHASE_5_SP_TO_ACT
+            entry_actions:
+              - PROMPT_PHASE_5_SP_TO_ACT
+              - SHOW_SP_DICE_POOL
+            exit_actions: []
+            transitions:
+              - event: PIECE_MOVED
+                target: PHASE_5_SP_DIE_SELECTED
+                description: "SP moved a die to area 152 (selected)."
+                guard: PIECE_IS_SP_DIE_TO_AREA_152
+                actions:
+                  - RECORD_SELECTED_DIE
+                  - PROMPT_PHASE_5_DIE_SELECTED
+              - event: SP_PASSES
+                target: PHASE_5_AFTER_SP_PASS
+                description: "Shadow passes."
+                guard: null
+                actions: []
+
+          - id: PHASE_5_SP_DIE_SELECTED
+            kind: normal
+            label: "SP Die Selected"
+            description: "SP has selected a die; determine available actions based on die face."
+            ui: {}
+            entry_actions:
+              - CHECK_ELVEN_RINGS_AVAILABLE
+              - DETERMINE_DIE_ACTIONS
+            exit_actions: []
+            transitions:
+              - event: USE_ELVEN_RING
+                target: PHASE_5_SP_DIE_SELECTED
+                description: "Shadow uses captured Elven Ring to re-roll die."
+                guard: HAS_AVAILABLE_ELVEN_RING
+                actions:
+                  - MOVE_ELVEN_RING_TO_SP_CASUALTIES
+                  - REROLL_SELECTED_DIE
+                  - PROMPT_ELVEN_RING_USED_SP
+                  - DETERMINE_DIE_ACTIONS
+
+              - event: ACTION_SELECTED
+                target: PHASE_5_RESOLVE_ACTION_SP
+                description: "SP chose an action for this die."
+                guard: null
+                actions:
+                  - RECORD_ACTION_CHOICE
+
+          - id: PHASE_5_RESOLVE_ACTION_FP
+            kind: normal
+            label: "Resolve FP Action"
+            description: "Resolve FP's chosen Action Die; may trigger Hunt/Combat or instant victory."
+            ui: {}
+            entry_actions:
+              - APPLY_FP_ACTION_DIE_EFFECT
+              - DECREMENT_FP_DICE_REMAINING
+              - CHECK_IF_FELLOWSHIP_MOVED_SET_FLAG
+              - CHECK_IF_COMBAT_STARTED_SET_FLAG
+              - UPDATE_GAME_STATE_FROM_FP_ACTION
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: GAME_END_SHADOW_RING
+                description: "Shadow wins by corruption."
+                guard: "CORRUPTION >= 12"
+                actions: []
+              - event: AUTO
+                target: GAME_END_FP_RING
+                description: "FP wins by Ring destruction."
+                guard: "FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12"
+                actions: []
+              - event: AUTO
+                target: COMBAT_START
+                description: "Combat triggered."
+                guard: "COMBAT_FLAG == true"
+                actions: []
+              - event: AUTO
+                target: HUNT_START
+                description: "Hunt triggered by Fellowship movement."
+                guard: "FELLOWSHIP_MOVED_FLAG == true"
+                actions: []
+              - event: AUTO
+                target: PHASE_5_DETERMINE_NEXT_ACTOR
+                description: "Default: continue alternating actions."
+                guard: null
+                actions: []
+
+          - id: PHASE_5_RESOLVE_ACTION_SP
+            kind: normal
+            label: "Resolve SP Action"
+            description: "Resolve SP's chosen Action Die; may trigger Hunt/Combat or instant victory."
+            ui: {}
+            entry_actions:
+              - APPLY_SP_ACTION_DIE_EFFECT
+              - DECREMENT_SP_DICE_REMAINING
+              - CHECK_IF_FELLOWSHIP_MOVED_SET_FLAG
+              - CHECK_IF_COMBAT_STARTED_SET_FLAG
+              - UPDATE_GAME_STATE_FROM_SP_ACTION
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: GAME_END_SHADOW_RING
+                description: "Shadow wins by corruption."
+                guard: "CORRUPTION >= 12"
+                actions: []
+              - event: AUTO
+                target: GAME_END_FP_RING
+                description: "FP wins by Ring destruction."
+                guard: "FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12"
+                actions: []
+              - event: AUTO
+                target: COMBAT_START
+                description: "Combat triggered."
+                guard: "COMBAT_FLAG == true"
+                actions: []
+              - event: AUTO
+                target: HUNT_START
+                description: "Hunt triggered by Fellowship movement."
+                guard: "FELLOWSHIP_MOVED_FLAG == true"
+                actions: []
+              - event: AUTO
+                target: PHASE_5_DETERMINE_NEXT_ACTOR
+                description: "Default: continue alternating actions."
+                guard: null
+                actions: []
+
+          - id: PHASE_5_AFTER_FP_PASS
+            kind: normal
+            label: "After FP Pass"
+            description: "Evaluate next actor after FP passes."
+            ui: {}
+            entry_actions:
+              - SET_FP_PASSED_FLAG
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_5_SP_ACTION
+                description: "Shadow can still act."
+                guard: "SP_DICE_REMAINING > 0"
+                actions: []
+              - event: AUTO
+                target: PHASE_5_CHECK_END
+                description: "Shadow has no dice."
+                guard: "SP_DICE_REMAINING == 0"
+                actions: []
+
+          - id: PHASE_5_AFTER_SP_PASS
+            kind: normal
+            label: "After SP Pass"
+            description: "Evaluate next actor after SP passes."
+            ui: {}
+            entry_actions:
+              - SET_SP_PASSED_FLAG
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_5_FP_ACTION
+                description: "FP can still act."
+                guard: "FP_DICE_REMAINING > 0"
+                actions: []
+              - event: AUTO
+                target: PHASE_5_CHECK_END
+                description: "FP has no dice."
+                guard: "FP_DICE_REMAINING == 0"
+                actions: []
+
+          - id: PHASE_5_DETERMINE_NEXT_ACTOR
+            kind: normal
+            label: "Determine Next Actor"
+            description: "Decide whether FP or SP acts next, or Phase 5 ends."
+            ui: {}
+            entry_actions:
+              - CLEAR_ACTION_FLAGS
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_5_END
+                description: "No dice left for either player."
+                guard: "FP_DICE_REMAINING == 0 AND SP_DICE_REMAINING == 0"
+                actions: []
+              - event: AUTO
+                target: PHASE_5_FP_ACTION
+                description: "Next actor is FP."
+                guard: "NEXT_ACTOR == 'FP'"
+                actions: []
+              - event: AUTO
+                target: PHASE_5_SP_ACTION
+                description: "Next actor is SP."
+                guard: "NEXT_ACTOR == 'SP'"
+                actions: []
+
+          - id: PHASE_5_CHECK_END
+            kind: normal
+            label: "Check Phase 5 End"
+            description: "Check if alternating actions can end due to both passing or no dice."
+            ui: {}
+            entry_actions: []
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_5_END
+                description: "Both out of dice or both passed."
+                guard: "(FP_DICE_REMAINING == 0 AND SP_DICE_REMAINING == 0) OR (FP_PASSED_FLAG == true AND SP_PASSED_FLAG == true)"
+                actions: []
+              - event: AUTO
+                target: PHASE_5_FP_ACTION
+                description: "FP can still act."
+                guard: "FP_DICE_REMAINING > 0"
+                actions: []
+              - event: AUTO
+                target: PHASE_5_SP_ACTION
+                description: "SP can still act."
+                guard: "SP_DICE_REMAINING > 0"
+                actions: []
+
+          - id: PHASE_5_END
+            kind: normal
+            label: "Phase 5 Complete"
+            description: "End of Action Resolution."
+            ui:
+              on_enter_prompt_id: PHASE_5_COMPLETE
+            entry_actions:
+              - PROMPT_PHASE_5_COMPLETE
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: PHASE_6_VICTORY_CHECK
+                description: "Proceed to Phase 6."
+                guard: null
+                actions: []
+
+      - id: PHASE_6
+        label: "Phase 6 — Victory Check"
+        order: 7
+        states:
+          - id: PHASE_6_VICTORY_CHECK
+            kind: normal
+            label: "Victory Check"
+            description: "Check military victory and ring conditions."
+            ui:
+              on_enter_prompt_id: PHASE_6_START
+            entry_actions:
+              - PROMPT_PHASE_6_START
+              - CHECK_MILITARY_VP_TOTALS
+              - RECHECK_RING_CONDITIONS_FOR_SAFETY
+            exit_actions: []
+            transitions:
+              - event: AUTO
+                target: GAME_END_SHADOW_RING
+                description: "Shadow wins by ring corruption."
+                guard: "CORRUPTION >= 12"
+                actions: []
+              - event: AUTO
+                target: GAME_END_FP_RING
+                description: "FP wins by ring destruction."
+                guard: "FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12"
+                actions: []
+              - event: AUTO
+                target: GAME_END_SHADOW_MILITARY
+                description: "Shadow wins by military victory."
+                guard: "SHADOW_VP >= 10"
+                actions: []
+              - event: AUTO
+                target: GAME_END_FP_MILITARY
+                description: "FP wins by military victory."
+                guard: "FP_VP >= 4"
+                actions: []
+              - event: AUTO
+                target: NO_VICTORY_NEXT_TURN
+                description: "No victory; proceed to next turn."
+                guard: null
+                actions: []
+
+  - id: HUNT
+    label: "Hunt Subsystem"
+    type: subsystem
+    description: "Triggered whenever the Fellowship moves."
+    states:
+      - id: HUNT_START
+        kind: normal
+        label: "Hunt Start"
+        description: "Initialize Hunt when Fellowship moves."
+        ui:
+          on_enter_prompt_id: HUNT_START
+        entry_actions:
+          - PROMPT_HUNT_START
+          - CALCULATE_HUNT_LEVEL
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: HUNT_ROLL
+            description: "Proceed to Hunt roll."
+            guard: null
+            actions: []
+
+      - id: HUNT_ROLL
+        kind: normal
+        label: "Hunt Roll"
+        description: "Shadow rolls Hunt dice and compute successes."
+        ui:
+          on_enter_prompt_id: HUNT_ROLL
+        entry_actions:
+          - PROMPT_HUNT_ROLL
+          - ROLL_HUNT_DICE
+          - APPLY_HUNT_MODIFIERS_AND_REROLLS
+          - COMPUTE_HUNT_SUCCESSES
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: HUNT_END_NO_HIT
+            description: "No Hunt successes."
+            guard: "HUNT_SUCCESSES == 0"
+            actions: []
+          - event: AUTO
+            target: HUNT_DRAW_TILE
+            description: "At least one Hunt success."
+            guard: "HUNT_SUCCESSES > 0"
+            actions: []
+
+      - id: HUNT_DRAW_TILE
+        kind: normal
+        label: "Hunt Draw Tile"
+        description: "Draw and classify a Hunt tile."
+        ui: {}
+        entry_actions:
+          - PROMPT_HUNT_DRAW_TILE
+          - DRAW_HUNT_TILE
+          - CLASSIFY_HUNT_TILE
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: HUNT_APPLY_TILE
+            description: "Apply tile effects."
+            guard: null
+            actions: []
+
+      - id: HUNT_APPLY_TILE
+        kind: normal
+        label: "Hunt Apply Tile"
+        description: "Apply Hunt tile effects and update Fellowship/corruption."
+        ui: {}
+        entry_actions:
+          - APPLY_HUNT_TILE_EFFECTS
+          - UPDATE_CORRUPTION_FROM_TILE
+          - UPDATE_FELLOWSHIP_REVEAL_AND_POSITION_IF_NEEDED
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: GAME_END_SHADOW_RING
+            description: "Shadow wins if corruption hits 12."
+            guard: "CORRUPTION >= 12"
+            actions: []
+          - event: AUTO
+            target: HUNT_ASSIGN_DAMAGE
+            description: "FP must assign Hunt damage."
+            guard: "HUNT_DAMAGE_TO_ASSIGN > 0"
+            actions: []
+          - event: AUTO
+            target: HUNT_END
+            description: "No damage to assign."
+            guard: "HUNT_DAMAGE_TO_ASSIGN == 0"
+            actions: []
+
+      - id: HUNT_ASSIGN_DAMAGE
+        kind: normal
+        label: "Hunt Assign Damage"
+        description: "FP chooses casualty/corruption allocation for Hunt damage."
+        ui: {}
+        entry_actions:
+          - PROMPT_FP_ASSIGN_HUNT_DAMAGE
+        exit_actions: []
+        transitions:
+          - event: FP_HUNT_DAMAGE_ASSIGNED
+            target: HUNT_AFTER_DAMAGE
+            description: "FP completed Hunt damage assignment."
+            guard: null
+            actions: []
+
+      - id: HUNT_AFTER_DAMAGE
+        kind: normal
+        label: "Hunt After Damage"
+        description: "Apply FP's choice and re-check corruption."
+        ui: {}
+        entry_actions:
+          - APPLY_FP_HUNT_DAMAGE_CHOICE
+          - UPDATE_CORRUPTION_FROM_DAMAGE
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: GAME_END_SHADOW_RING
+            description: "Shadow wins if corruption hits 12."
+            guard: "CORRUPTION >= 12"
+            actions: []
+          - event: AUTO
+            target: HUNT_END
+            description: "Hunt ends after damage."
+            guard: null
+            actions: []
+
+      - id: HUNT_END_NO_HIT
+        kind: normal
+        label: "Hunt End - No Hit"
+        description: "Hunt failed with no successes."
+        ui:
+          on_enter_prompt_id: HUNT_NO_SUCCESS
+        entry_actions:
+          - PROMPT_HUNT_NO_SUCCESS
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: PHASE_5_DETERMINE_NEXT_ACTOR
+            description: "Return to Phase 5 alternating actions."
+            guard: null
+            actions: []
+
+      - id: HUNT_END
+        kind: normal
+        label: "Hunt End"
+        description: "End of Hunt sub-phase."
+        ui:
+          on_enter_prompt_id: HUNT_COMPLETE
+        entry_actions:
+          - PROMPT_HUNT_COMPLETE
+          - CLEAR_HUNT_FLAGS
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: PHASE_5_DETERMINE_NEXT_ACTOR
+            description: "Return to Phase 5 alternating actions."
+            guard: null
+            actions: []
+
+  - id: COMBAT
+    label: "Combat Subsystem"
+    type: subsystem
+    description: "Field battles and siege battles."
+    states:
+      - id: COMBAT_START
+        kind: normal
+        label: "Combat Start"
+        description: "Initialize combat, set combat type."
+        ui:
+          on_enter_prompt_id: COMBAT_START
+        entry_actions:
+          - PROMPT_COMBAT_START
+          - INIT_COMBAT_CONTEXT
+          - DETERMINE_COMBAT_TYPE
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: FIELD_START
+            description: "Field or sortie battle."
+            guard: "COMBAT_TYPE == 'FIELD' OR COMBAT_TYPE == 'SORTIE'"
+            actions: []
+          - event: AUTO
+            target: SIEGE_START
+            description: "Siege battle."
+            guard: "COMBAT_TYPE == 'SIEGE'"
+            actions: []
+
+      # FIELD / SORTIE FLOW (collapsed into core states from JSON FSM)
+      - id: FIELD_START
+        kind: normal
+        label: "Field Battle Start"
+        description: "Entry into field/sortie battle loop."
+        ui: {}
+        entry_actions: []
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: COMBAT_CARD_SELECTION
+            description: "Begin field/sortie combat round."
+            guard: null
+            actions: []
+
+      - id: COMBAT_CARD_SELECTION
+        kind: normal
+        label: "Combat Card Selection"
+        description: "Both players secretly choose combat cards."
+        ui: {}
+        entry_actions:
+          - PROMPT_BOTH_PLAYERS_SELECT_COMBAT_CARDS
+        exit_actions: []
+        transitions:
+          - event: COMBAT_BOTH_CARDS_LOCKED
+            target: COMBAT_REVEAL_CARDS
+            description: "Both combat cards locked."
+            guard: null
+            actions: []
+
+      - id: COMBAT_REVEAL_CARDS
+        kind: normal
+        label: "Combat Reveal Cards"
+        description: "Reveal combat cards and apply setup effects."
+        ui: {}
+        entry_actions:
+          - REVEAL_COMBAT_CARDS
+          - APPLY_CARD_SETUP_EFFECTS
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: COMBAT_ATTACK_ROLL
+            description: "Proceed to attacker combat roll."
+            guard: null
+            actions: []
+
+      - id: COMBAT_ATTACK_ROLL
+        kind: normal
+        label: "Combat Attack Roll"
+        description: "Attacker rolls combat dice."
+        ui: {}
+        entry_actions:
+          - PROMPT_ATTACKER_ROLL
+          - ATTACKER_ROLL_COMBAT_DICE
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: COMBAT_DEFENSE_ROLL
+            description: "Proceed to defender combat roll."
+            guard: null
+            actions: []
+
+      - id: COMBAT_DEFENSE_ROLL
+        kind: normal
+        label: "Combat Defense Roll"
+        description: "Defender rolls combat dice."
+        ui: {}
+        entry_actions:
+          - PROMPT_DEFENDER_ROLL
+          - DEFENDER_ROLL_COMBAT_DICE
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: COMBAT_ASSIGN_HITS
+            description: "Proceed to hit assignment."
+            guard: null
+            actions: []
+
+      - id: COMBAT_ASSIGN_HITS
+        kind: normal
+        label: "Combat Assign Hits"
+        description: "Both sides assign hits."
+        ui: {}
+        entry_actions:
+          - COMPUTE_HITS_BOTH_SIDES
+          - PROMPT_ATTACKER_ASSIGN_HITS
+          - PROMPT_DEFENDER_ASSIGN_HITS
+        exit_actions: []
+        transitions:
+          - event: BOTH_SIDES_ASSIGNED_HITS
+            target: COMBAT_LEADER_REROLLS
+            description: "Both sides have assigned hits."
+            guard: null
+            actions: []
+
+      - id: COMBAT_LEADER_REROLLS
+        kind: normal
+        label: "Combat Leader Rerolls"
+        description: "Leader rerolls for both sides, if available."
+        ui: {}
+        entry_actions:
+          - PROMPT_LEADER_REROLLS_IF_AVAILABLE
+          - APPLY_LEADER_REROLLS
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: COMBAT_RETREAT_DECISIONS
+            description: "Proceed to retreat/continue decisions."
+            guard: null
+            actions: []
+
+      - id: COMBAT_RETREAT_DECISIONS
+        kind: normal
+        label: "Combat Retreat Decisions"
+        description: "Defender and then attacker decide retreat/continue."
+        ui: {}
+        entry_actions:
+          - PROMPT_DEFENDER_RETREAT_OR_CONTINUE
+          - PROMPT_ATTACKER_CONTINUE_OR_STOP
+        exit_actions: []
+        transitions:
+          - event: COMBAT_BATTLE_OVER
+            target: COMBAT_END
+            description: "Battle ends (retreat, elimination, or attacker stops)."
+            guard: null
+            actions: []
+          - event: COMBAT_CONTINUES_NEXT_ROUND
+            target: COMBAT_CARD_SELECTION
+            description: "Combat continues to another round."
+            guard: null
+            actions: []
+
+      # SIEGE FLOW ENTRY
+      - id: SIEGE_START
+        kind: normal
+        label: "Siege Battle Start"
+        description: "Start siege combat vs besieged Stronghold."
+        ui: {}
+        entry_actions: []
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: SIEGE_CARD_SELECTION
+            description: "Begin siege combat round."
+            guard: null
+            actions: []
+
+      - id: SIEGE_CARD_SELECTION
+        kind: normal
+        label: "Siege Card Selection"
+        description: "Both sides choose combat cards during siege."
+        ui: {}
+        entry_actions:
+          - PROMPT_BOTH_PLAYERS_SELECT_COMBAT_CARDS
+        exit_actions: []
+        transitions:
+          - event: COMBAT_BOTH_CARDS_LOCKED
+            target: SIEGE_REVEAL_CARDS
+            description: "Both siege combat cards locked."
+            guard: null
+            actions: []
+
+      - id: SIEGE_REVEAL_CARDS
+        kind: normal
+        label: "Siege Reveal Cards"
+        description: "Reveal siege combat cards and apply setup."
+        ui: {}
+        entry_actions:
+          - REVEAL_COMBAT_CARDS
+          - APPLY_CARD_SETUP_EFFECTS
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: SIEGE_ATTACK_ROLL
+            description: "Proceed to siege attacker roll."
+            guard: null
+            actions: []
+
+      - id: SIEGE_ATTACK_ROLL
+        kind: normal
+        label: "Siege Attack Roll"
+        description: "Attacker rolls combat dice with siege modifiers."
+        ui: {}
+        entry_actions:
+          - PROMPT_ATTACKER_ROLL
+          - ATTACKER_ROLL_COMBAT_DICE
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: SIEGE_DEFENSE_ROLL
+            description: "Proceed to siege defender roll."
+            guard: null
+            actions: []
+
+      - id: SIEGE_DEFENSE_ROLL
+        kind: normal
+        label: "Siege Defense Roll"
+        description: "Defender rolls combat dice in siege."
+        ui: {}
+        entry_actions:
+          - PROMPT_DEFENDER_ROLL
+          - DEFENDER_ROLL_COMBAT_DICE
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: SIEGE_ASSIGN_HITS
+            description: "Proceed to siege hit assignment."
+            guard: null
+            actions: []
+
+      - id: SIEGE_ASSIGN_HITS
+        kind: normal
+        label: "Siege Assign Hits"
+        description: "Both sides assign hits in siege."
+        ui: {}
+        entry_actions:
+          - COMPUTE_HITS_BOTH_SIDES
+          - PROMPT_ATTACKER_ASSIGN_HITS
+          - PROMPT_DEFENDER_ASSIGN_HITS
+        exit_actions: []
+        transitions:
+          - event: BOTH_SIDES_ASSIGNED_HITS
+            target: SIEGE_LEADER_REROLLS
+            description: "Both sides assigned hits."
+            guard: null
+            actions: []
+
+      - id: SIEGE_LEADER_REROLLS
+        kind: normal
+        label: "Siege Leader Rerolls"
+        description: "Leader rerolls in siege, if any."
+        ui: {}
+        entry_actions:
+          - PROMPT_LEADER_REROLLS_IF_AVAILABLE
+          - APPLY_LEADER_REROLLS
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: SIEGE_EXTRA_ROUND_DECISION
+            description: "Proceed to extra round decision."
+            guard: null
+            actions: []
+
+      - id: SIEGE_EXTRA_ROUND_DECISION
+        kind: normal
+        label: "Siege Extra Round Decision"
+        description: "Attacker decides to stop or spend Elite for extra round."
+        ui: {}
+        entry_actions: []
+        exit_actions: []
+        transitions:
+          - event: ATTACKER_STOPS_OR_NO_ELITE
+            target: COMBAT_END
+            description: "Attacker ends siege or cannot pay."
+            guard: null
+            actions: []
+          - event: ATTACKER_SPENDS_ELITE_FOR_EXTRA_ROUND
+            target: SIEGE_CARD_SELECTION
+            description: "Attacker spends Elite to continue siege."
+            guard: null
+            actions:
+              - DOWNGRADE_ATTACKER_ELITE_UNIT
+
+      - id: COMBAT_END
+        kind: normal
+        label: "Combat End"
+        description: "Combat fully resolved."
+        ui:
+          on_enter_prompt_id: COMBAT_END_SUMMARY
+        entry_actions:
+          - PROMPT_COMBAT_END_SUMMARY
+          - CLEAR_COMBAT_CONTEXT
+        exit_actions: []
+        transitions:
+          - event: AUTO
+            target: PHASE_5_DETERMINE_NEXT_ACTOR
+            description: "Return to Phase 5 alternating actions."
+            guard: null
+            actions: []

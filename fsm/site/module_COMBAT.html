@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FSM Module — Combat Subsystem</title>
+  <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true });</script>
+  <style>body{font-family:system-ui, sans-serif; padding:16px;} table{border-collapse:collapse; width:100%; margin-top:16px;} th,td{border:1px solid #ccc; padding:4px 8px; font-size:13px;} code{font-size:12px;}</style>
+</head>
+<body>
+<p><a href="index.html">&larr; Back to modules index</a></p>
+<h1>Combat Subsystem <small><code>COMBAT</code></small></h1>
+<h2>Diagram</h2>
+<div class="mermaid">
+stateDiagram-v2
+    state "COMBAT_START : Combat Start" as COMBAT_START
+    state "FIELD_START : Field Battle Start" as FIELD_START
+    state "COMBAT_CARD_SELECTION : Combat Card Selection" as COMBAT_CARD_SELECTION
+    state "COMBAT_REVEAL_CARDS : Combat Reveal Cards" as COMBAT_REVEAL_CARDS
+    state "COMBAT_ATTACK_ROLL : Combat Attack Roll" as COMBAT_ATTACK_ROLL
+    state "COMBAT_DEFENSE_ROLL : Combat Defense Roll" as COMBAT_DEFENSE_ROLL
+    state "COMBAT_ASSIGN_HITS : Combat Assign Hits" as COMBAT_ASSIGN_HITS
+    state "COMBAT_LEADER_REROLLS : Combat Leader Rerolls" as COMBAT_LEADER_REROLLS
+    state "COMBAT_RETREAT_DECISIONS : Combat Retreat Decisions" as COMBAT_RETREAT_DECISIONS
+    state "SIEGE_START : Siege Battle Start" as SIEGE_START
+    state "SIEGE_CARD_SELECTION : Siege Card Selection" as SIEGE_CARD_SELECTION
+    state "SIEGE_REVEAL_CARDS : Siege Reveal Cards" as SIEGE_REVEAL_CARDS
+    state "SIEGE_ATTACK_ROLL : Siege Attack Roll" as SIEGE_ATTACK_ROLL
+    state "SIEGE_DEFENSE_ROLL : Siege Defense Roll" as SIEGE_DEFENSE_ROLL
+    state "SIEGE_ASSIGN_HITS : Siege Assign Hits" as SIEGE_ASSIGN_HITS
+    state "SIEGE_LEADER_REROLLS : Siege Leader Rerolls" as SIEGE_LEADER_REROLLS
+    state "SIEGE_EXTRA_ROUND_DECISION : Siege Extra Round Decision" as SIEGE_EXTRA_ROUND_DECISION
+    state "COMBAT_END : Combat End" as COMBAT_END
+    COMBAT_START --> FIELD_START : AUTO [COMBAT_TYPE == 'FIELD' OR COMBAT_TYPE == 'SORTIE']
+    COMBAT_START --> SIEGE_START : AUTO [COMBAT_TYPE == 'SIEGE']
+    FIELD_START --> COMBAT_CARD_SELECTION : AUTO
+    COMBAT_CARD_SELECTION --> COMBAT_REVEAL_CARDS : COMBAT_BOTH_CARDS_LOCKED
+    COMBAT_REVEAL_CARDS --> COMBAT_ATTACK_ROLL : AUTO
+    COMBAT_ATTACK_ROLL --> COMBAT_DEFENSE_ROLL : AUTO
+    COMBAT_DEFENSE_ROLL --> COMBAT_ASSIGN_HITS : AUTO
+    COMBAT_ASSIGN_HITS --> COMBAT_LEADER_REROLLS : BOTH_SIDES_ASSIGNED_HITS
+    COMBAT_LEADER_REROLLS --> COMBAT_RETREAT_DECISIONS : AUTO
+    COMBAT_RETREAT_DECISIONS --> COMBAT_END : COMBAT_BATTLE_OVER
+    COMBAT_RETREAT_DECISIONS --> COMBAT_CARD_SELECTION : COMBAT_CONTINUES_NEXT_ROUND
+    SIEGE_START --> SIEGE_CARD_SELECTION : AUTO
+    SIEGE_CARD_SELECTION --> SIEGE_REVEAL_CARDS : COMBAT_BOTH_CARDS_LOCKED
+    SIEGE_REVEAL_CARDS --> SIEGE_ATTACK_ROLL : AUTO
+    SIEGE_ATTACK_ROLL --> SIEGE_DEFENSE_ROLL : AUTO
+    SIEGE_DEFENSE_ROLL --> SIEGE_ASSIGN_HITS : AUTO
+    SIEGE_ASSIGN_HITS --> SIEGE_LEADER_REROLLS : BOTH_SIDES_ASSIGNED_HITS
+    SIEGE_LEADER_REROLLS --> SIEGE_EXTRA_ROUND_DECISION : AUTO
+    SIEGE_EXTRA_ROUND_DECISION --> COMBAT_END : ATTACKER_STOPS_OR_NO_ELITE
+    SIEGE_EXTRA_ROUND_DECISION --> SIEGE_CARD_SELECTION : ATTACKER_SPENDS_ELITE_FOR_EXTRA_ROUND
+    COMBAT_END --> PHASE_5_DETERMINE_NEXT_ACTOR : AUTO
+</div>
+<h2>States</h2>
+<table><thead><tr><th>State</th><th>Description</th><th>Entry Actions</th><th>Transitions</th></tr></thead><tbody>
+<tr id="COMBAT_START"><td><code>COMBAT_START</code><br>Combat Start</td><td>Initialize combat, set combat type.</td><td>PROMPT_COMBAT_START<br>INIT_COMBAT_CONTEXT<br>DETERMINE_COMBAT_TYPE</td><td><code>AUTO</code> → <a href="#FIELD_START"><code>FIELD_START</code></a> [if COMBAT_TYPE == 'FIELD' OR COMBAT_TYPE == 'SORTIE']<br><code>AUTO</code> → <a href="#SIEGE_START"><code>SIEGE_START</code></a> [if COMBAT_TYPE == 'SIEGE']</td></tr>
+<tr id="FIELD_START"><td><code>FIELD_START</code><br>Field Battle Start</td><td>Entry into field/sortie battle loop.</td><td></td><td><code>AUTO</code> → <a href="#COMBAT_CARD_SELECTION"><code>COMBAT_CARD_SELECTION</code></a></td></tr>
+<tr id="COMBAT_CARD_SELECTION"><td><code>COMBAT_CARD_SELECTION</code><br>Combat Card Selection</td><td>Both players secretly choose combat cards.</td><td>PROMPT_BOTH_PLAYERS_SELECT_COMBAT_CARDS</td><td><code>COMBAT_BOTH_CARDS_LOCKED</code> → <a href="#COMBAT_REVEAL_CARDS"><code>COMBAT_REVEAL_CARDS</code></a></td></tr>
+<tr id="COMBAT_REVEAL_CARDS"><td><code>COMBAT_REVEAL_CARDS</code><br>Combat Reveal Cards</td><td>Reveal combat cards and apply setup effects.</td><td>REVEAL_COMBAT_CARDS<br>APPLY_CARD_SETUP_EFFECTS</td><td><code>AUTO</code> → <a href="#COMBAT_ATTACK_ROLL"><code>COMBAT_ATTACK_ROLL</code></a></td></tr>
+<tr id="COMBAT_ATTACK_ROLL"><td><code>COMBAT_ATTACK_ROLL</code><br>Combat Attack Roll</td><td>Attacker rolls combat dice.</td><td>PROMPT_ATTACKER_ROLL<br>ATTACKER_ROLL_COMBAT_DICE</td><td><code>AUTO</code> → <a href="#COMBAT_DEFENSE_ROLL"><code>COMBAT_DEFENSE_ROLL</code></a></td></tr>
+<tr id="COMBAT_DEFENSE_ROLL"><td><code>COMBAT_DEFENSE_ROLL</code><br>Combat Defense Roll</td><td>Defender rolls combat dice.</td><td>PROMPT_DEFENDER_ROLL<br>DEFENDER_ROLL_COMBAT_DICE</td><td><code>AUTO</code> → <a href="#COMBAT_ASSIGN_HITS"><code>COMBAT_ASSIGN_HITS</code></a></td></tr>
+<tr id="COMBAT_ASSIGN_HITS"><td><code>COMBAT_ASSIGN_HITS</code><br>Combat Assign Hits</td><td>Both sides assign hits.</td><td>COMPUTE_HITS_BOTH_SIDES<br>PROMPT_ATTACKER_ASSIGN_HITS<br>PROMPT_DEFENDER_ASSIGN_HITS</td><td><code>BOTH_SIDES_ASSIGNED_HITS</code> → <a href="#COMBAT_LEADER_REROLLS"><code>COMBAT_LEADER_REROLLS</code></a></td></tr>
+<tr id="COMBAT_LEADER_REROLLS"><td><code>COMBAT_LEADER_REROLLS</code><br>Combat Leader Rerolls</td><td>Leader rerolls for both sides, if available.</td><td>PROMPT_LEADER_REROLLS_IF_AVAILABLE<br>APPLY_LEADER_REROLLS</td><td><code>AUTO</code> → <a href="#COMBAT_RETREAT_DECISIONS"><code>COMBAT_RETREAT_DECISIONS</code></a></td></tr>
+<tr id="COMBAT_RETREAT_DECISIONS"><td><code>COMBAT_RETREAT_DECISIONS</code><br>Combat Retreat Decisions</td><td>Defender and then attacker decide retreat/continue.</td><td>PROMPT_DEFENDER_RETREAT_OR_CONTINUE<br>PROMPT_ATTACKER_CONTINUE_OR_STOP</td><td><code>COMBAT_BATTLE_OVER</code> → <a href="#COMBAT_END"><code>COMBAT_END</code></a><br><code>COMBAT_CONTINUES_NEXT_ROUND</code> → <a href="#COMBAT_CARD_SELECTION"><code>COMBAT_CARD_SELECTION</code></a></td></tr>
+<tr id="SIEGE_START"><td><code>SIEGE_START</code><br>Siege Battle Start</td><td>Start siege combat vs besieged Stronghold.</td><td></td><td><code>AUTO</code> → <a href="#SIEGE_CARD_SELECTION"><code>SIEGE_CARD_SELECTION</code></a></td></tr>
+<tr id="SIEGE_CARD_SELECTION"><td><code>SIEGE_CARD_SELECTION</code><br>Siege Card Selection</td><td>Both sides choose combat cards during siege.</td><td>PROMPT_BOTH_PLAYERS_SELECT_COMBAT_CARDS</td><td><code>COMBAT_BOTH_CARDS_LOCKED</code> → <a href="#SIEGE_REVEAL_CARDS"><code>SIEGE_REVEAL_CARDS</code></a></td></tr>
+<tr id="SIEGE_REVEAL_CARDS"><td><code>SIEGE_REVEAL_CARDS</code><br>Siege Reveal Cards</td><td>Reveal siege combat cards and apply setup.</td><td>REVEAL_COMBAT_CARDS<br>APPLY_CARD_SETUP_EFFECTS</td><td><code>AUTO</code> → <a href="#SIEGE_ATTACK_ROLL"><code>SIEGE_ATTACK_ROLL</code></a></td></tr>
+<tr id="SIEGE_ATTACK_ROLL"><td><code>SIEGE_ATTACK_ROLL</code><br>Siege Attack Roll</td><td>Attacker rolls combat dice with siege modifiers.</td><td>PROMPT_ATTACKER_ROLL<br>ATTACKER_ROLL_COMBAT_DICE</td><td><code>AUTO</code> → <a href="#SIEGE_DEFENSE_ROLL"><code>SIEGE_DEFENSE_ROLL</code></a></td></tr>
+<tr id="SIEGE_DEFENSE_ROLL"><td><code>SIEGE_DEFENSE_ROLL</code><br>Siege Defense Roll</td><td>Defender rolls combat dice in siege.</td><td>PROMPT_DEFENDER_ROLL<br>DEFENDER_ROLL_COMBAT_DICE</td><td><code>AUTO</code> → <a href="#SIEGE_ASSIGN_HITS"><code>SIEGE_ASSIGN_HITS</code></a></td></tr>
+<tr id="SIEGE_ASSIGN_HITS"><td><code>SIEGE_ASSIGN_HITS</code><br>Siege Assign Hits</td><td>Both sides assign hits in siege.</td><td>COMPUTE_HITS_BOTH_SIDES<br>PROMPT_ATTACKER_ASSIGN_HITS<br>PROMPT_DEFENDER_ASSIGN_HITS</td><td><code>BOTH_SIDES_ASSIGNED_HITS</code> → <a href="#SIEGE_LEADER_REROLLS"><code>SIEGE_LEADER_REROLLS</code></a></td></tr>
+<tr id="SIEGE_LEADER_REROLLS"><td><code>SIEGE_LEADER_REROLLS</code><br>Siege Leader Rerolls</td><td>Leader rerolls in siege, if any.</td><td>PROMPT_LEADER_REROLLS_IF_AVAILABLE<br>APPLY_LEADER_REROLLS</td><td><code>AUTO</code> → <a href="#SIEGE_EXTRA_ROUND_DECISION"><code>SIEGE_EXTRA_ROUND_DECISION</code></a></td></tr>
+<tr id="SIEGE_EXTRA_ROUND_DECISION"><td><code>SIEGE_EXTRA_ROUND_DECISION</code><br>Siege Extra Round Decision</td><td>Attacker decides to stop or spend Elite for extra round.</td><td></td><td><code>ATTACKER_STOPS_OR_NO_ELITE</code> → <a href="#COMBAT_END"><code>COMBAT_END</code></a><br><code>ATTACKER_SPENDS_ELITE_FOR_EXTRA_ROUND</code> → <a href="#SIEGE_CARD_SELECTION"><code>SIEGE_CARD_SELECTION</code></a></td></tr>
+<tr id="COMBAT_END"><td><code>COMBAT_END</code><br>Combat End</td><td>Combat fully resolved.</td><td>PROMPT_COMBAT_END_SUMMARY<br>CLEAR_COMBAT_CONTEXT</td><td><code>AUTO</code> → <a href="#PHASE_5_DETERMINE_NEXT_ACTOR"><code>PHASE_5_DETERMINE_NEXT_ACTOR</code></a></td></tr>
+</tbody></table>
+</body>
+</html>

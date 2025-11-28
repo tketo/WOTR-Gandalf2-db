@@ -1,0 +1,58 @@
+game: war_of_the_ring
+version: 0.1.0
+
+config:
+  hand_limit: 6
+  initial_state: TURN_START
+
+# Optional global prompt catalog if you want reuse
+prompts:
+  # prompt_id: prompt text with optional tokens like {{turn}}, {{player}}
+  PHASE_1_START: "🌅 Turn {{turn}} — Phase 1: Recover Dice & Draw Cards"
+  PHASE_5_FP_TO_ACT: "🟦 Phase 5: Free Peoples to act. Waiting for FREE PEOPLES to choose an Action Die..."
+  # ...
+
+# Top-level sections that can be used to group states
+modules:
+  - id: CORE_TURN
+    label: "Core Turn Phases"
+    description: "Phase 1–6, high-level turn loop."
+    type: phase_group        # or "subsystem"
+    phases:
+      - id: PHASE_1
+        label: "Phase 1 — Recover Dice & Draw Cards"
+        order: 1
+        states:
+          # list of STATE objects (see schema below)
+      - id: PHASE_2
+        label: "Phase 2 — Fellowship Phase"
+        order: 2
+        states: []
+      - id: PHASE_3
+        label: "Phase 3 — Hunt Allocation"
+        order: 3
+        states: []
+      - id: PHASE_4
+        label: "Phase 4 — Action Roll"
+        order: 4
+        states: []
+      - id: PHASE_5
+        label: "Phase 5 — Action Resolution"
+        order: 5
+        states: []
+      - id: PHASE_6
+        label: "Phase 6 — Victory Check"
+        order: 6
+        states: []
+
+  - id: HUNT
+    label: "Hunt Subsystem"
+    type: subsystem
+    description: "Fellowship movement Hunt flow."
+    states: []   # list of STATE objects
+
+  - id: COMBAT
+    label: "Combat Subsystem"
+    type: subsystem
+    description: "Field battles and siege battles."
+    states: []   # list of STATE objects

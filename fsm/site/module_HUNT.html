@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FSM Module — Hunt Subsystem</title>
+  <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true });</script>
+  <style>body{font-family:system-ui, sans-serif; padding:16px;} table{border-collapse:collapse; width:100%; margin-top:16px;} th,td{border:1px solid #ccc; padding:4px 8px; font-size:13px;} code{font-size:12px;}</style>
+</head>
+<body>
+<p><a href="index.html">&larr; Back to modules index</a></p>
+<h1>Hunt Subsystem <small><code>HUNT</code></small></h1>
+<h2>Diagram</h2>
+<div class="mermaid">
+stateDiagram-v2
+    state "HUNT_START : Hunt Start" as HUNT_START
+    state "HUNT_ROLL : Hunt Roll" as HUNT_ROLL
+    state "HUNT_DRAW_TILE : Hunt Draw Tile" as HUNT_DRAW_TILE
+    state "HUNT_APPLY_TILE : Hunt Apply Tile" as HUNT_APPLY_TILE
+    state "HUNT_ASSIGN_DAMAGE : Hunt Assign Damage" as HUNT_ASSIGN_DAMAGE
+    state "HUNT_AFTER_DAMAGE : Hunt After Damage" as HUNT_AFTER_DAMAGE
+    state "HUNT_END_NO_HIT : Hunt End - No Hit" as HUNT_END_NO_HIT
+    state "HUNT_END : Hunt End" as HUNT_END
+    HUNT_START --> HUNT_ROLL : AUTO
+    HUNT_ROLL --> HUNT_END_NO_HIT : AUTO [HUNT_SUCCESSES == 0]
+    HUNT_ROLL --> HUNT_DRAW_TILE : AUTO [HUNT_SUCCESSES > 0]
+    HUNT_DRAW_TILE --> HUNT_APPLY_TILE : AUTO
+    HUNT_APPLY_TILE --> GAME_END_SHADOW_RING : AUTO [CORRUPTION >= 12]
+    HUNT_APPLY_TILE --> HUNT_ASSIGN_DAMAGE : AUTO [HUNT_DAMAGE_TO_ASSIGN > 0]
+    HUNT_APPLY_TILE --> HUNT_END : AUTO [HUNT_DAMAGE_TO_ASSIGN == 0]
+    HUNT_ASSIGN_DAMAGE --> HUNT_AFTER_DAMAGE : FP_HUNT_DAMAGE_ASSIGNED
+    HUNT_AFTER_DAMAGE --> GAME_END_SHADOW_RING : AUTO [CORRUPTION >= 12]
+    HUNT_AFTER_DAMAGE --> HUNT_END : AUTO
+    HUNT_END_NO_HIT --> PHASE_5_DETERMINE_NEXT_ACTOR : AUTO
+    HUNT_END --> PHASE_5_DETERMINE_NEXT_ACTOR : AUTO
+</div>
+<h2>States</h2>
+<table><thead><tr><th>State</th><th>Description</th><th>Entry Actions</th><th>Transitions</th></tr></thead><tbody>
+<tr id="HUNT_START"><td><code>HUNT_START</code><br>Hunt Start</td><td>Initialize Hunt when Fellowship moves.</td><td>PROMPT_HUNT_START<br>CALCULATE_HUNT_LEVEL</td><td><code>AUTO</code> → <a href="#HUNT_ROLL"><code>HUNT_ROLL</code></a></td></tr>
+<tr id="HUNT_ROLL"><td><code>HUNT_ROLL</code><br>Hunt Roll</td><td>Shadow rolls Hunt dice and compute successes.</td><td>PROMPT_HUNT_ROLL<br>ROLL_HUNT_DICE<br>APPLY_HUNT_MODIFIERS_AND_REROLLS<br>COMPUTE_HUNT_SUCCESSES</td><td><code>AUTO</code> → <a href="#HUNT_END_NO_HIT"><code>HUNT_END_NO_HIT</code></a> [if HUNT_SUCCESSES == 0]<br><code>AUTO</code> → <a href="#HUNT_DRAW_TILE"><code>HUNT_DRAW_TILE</code></a> [if HUNT_SUCCESSES > 0]</td></tr>
+<tr id="HUNT_DRAW_TILE"><td><code>HUNT_DRAW_TILE</code><br>Hunt Draw Tile</td><td>Draw and classify a Hunt tile.</td><td>PROMPT_HUNT_DRAW_TILE<br>DRAW_HUNT_TILE<br>CLASSIFY_HUNT_TILE</td><td><code>AUTO</code> → <a href="#HUNT_APPLY_TILE"><code>HUNT_APPLY_TILE</code></a></td></tr>
+<tr id="HUNT_APPLY_TILE"><td><code>HUNT_APPLY_TILE</code><br>Hunt Apply Tile</td><td>Apply Hunt tile effects and update Fellowship/corruption.</td><td>APPLY_HUNT_TILE_EFFECTS<br>UPDATE_CORRUPTION_FROM_TILE<br>UPDATE_FELLOWSHIP_REVEAL_AND_POSITION_IF_NEEDED</td><td><code>AUTO</code> → <a href="#GAME_END_SHADOW_RING"><code>GAME_END_SHADOW_RING</code></a> [if CORRUPTION >= 12]<br><code>AUTO</code> → <a href="#HUNT_ASSIGN_DAMAGE"><code>HUNT_ASSIGN_DAMAGE</code></a> [if HUNT_DAMAGE_TO_ASSIGN > 0]<br><code>AUTO</code> → <a href="#HUNT_END"><code>HUNT_END</code></a> [if HUNT_DAMAGE_TO_ASSIGN == 0]</td></tr>
+<tr id="HUNT_ASSIGN_DAMAGE"><td><code>HUNT_ASSIGN_DAMAGE</code><br>Hunt Assign Damage</td><td>FP chooses casualty/corruption allocation for Hunt damage.</td><td>PROMPT_FP_ASSIGN_HUNT_DAMAGE</td><td><code>FP_HUNT_DAMAGE_ASSIGNED</code> → <a href="#HUNT_AFTER_DAMAGE"><code>HUNT_AFTER_DAMAGE</code></a></td></tr>
+<tr id="HUNT_AFTER_DAMAGE"><td><code>HUNT_AFTER_DAMAGE</code><br>Hunt After Damage</td><td>Apply FP's choice and re-check corruption.</td><td>APPLY_FP_HUNT_DAMAGE_CHOICE<br>UPDATE_CORRUPTION_FROM_DAMAGE</td><td><code>AUTO</code> → <a href="#GAME_END_SHADOW_RING"><code>GAME_END_SHADOW_RING</code></a> [if CORRUPTION >= 12]<br><code>AUTO</code> → <a href="#HUNT_END"><code>HUNT_END</code></a></td></tr>
+<tr id="HUNT_END_NO_HIT"><td><code>HUNT_END_NO_HIT</code><br>Hunt End - No Hit</td><td>Hunt failed with no successes.</td><td>PROMPT_HUNT_NO_SUCCESS</td><td><code>AUTO</code> → <a href="#PHASE_5_DETERMINE_NEXT_ACTOR"><code>PHASE_5_DETERMINE_NEXT_ACTOR</code></a></td></tr>
+<tr id="HUNT_END"><td><code>HUNT_END</code><br>Hunt End</td><td>End of Hunt sub-phase.</td><td>PROMPT_HUNT_COMPLETE<br>CLEAR_HUNT_FLAGS</td><td><code>AUTO</code> → <a href="#PHASE_5_DETERMINE_NEXT_ACTOR"><code>PHASE_5_DETERMINE_NEXT_ACTOR</code></a></td></tr>
+</tbody></table>
+</body>
+</html>

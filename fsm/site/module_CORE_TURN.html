@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FSM Module — Core Turn Phases</title>
+  <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true });</script>
+  <style>body{font-family:system-ui, sans-serif; padding:16px;} table{border-collapse:collapse; width:100%; margin-top:16px;} th,td{border:1px solid #ccc; padding:4px 8px; font-size:13px;} code{font-size:12px;}</style>
+</head>
+<body>
+<p><a href="index.html">&larr; Back to modules index</a></p>
+<h1>Core Turn Phases <small><code>CORE_TURN</code></small></h1>
+<h2>Diagram</h2>
+<div class="mermaid">
+stateDiagram-v2
+    state "SETUP_GAME_OPTIONS : Game Options & Side Selection" as SETUP_GAME_OPTIONS
+    state "SETUP_SOLO_SIDE_SELECTION : Solo Side Selection" as SETUP_SOLO_SIDE_SELECTION
+    state "SETUP_CONNECTION_MODE : Connection Mode" as SETUP_CONNECTION_MODE
+    state "SETUP_CLIENT_CONNECT : Join Game" as SETUP_CLIENT_CONNECT
+    state "SETUP_LOBBY_HOST : Host Lobby" as SETUP_LOBBY_HOST
+    state "SETUP_LOBBY_CLIENT : Client Lobby" as SETUP_LOBBY_CLIENT
+    state "SETUP_SIDE_ASSIGNMENT : Side Assignment" as SETUP_SIDE_ASSIGNMENT
+    state "PROMPT_GAME_INITIALIZATION : Prompt Game Initialization" as PROMPT_GAME_INITIALIZATION
+    state "VALIDATE_SIDE_ASSIGNMENTS : Validate Side Assignments" as VALIDATE_SIDE_ASSIGNMENTS
+    state "PERSIST_PLAYER_FACTION_ASSIGNMENTS : Persist Player Faction Assignments" as PERSIST_PLAYER_FACTION_ASSIGNMENTS
+    state "INITIALIZE_FP_RESOURCES : Initialize FP Resources" as INITIALIZE_FP_RESOURCES
+    state "INITIALIZE_SP_RESOURCES : Initialize SP Resources" as INITIALIZE_SP_RESOURCES
+    state "SETUP_INITIAL_BOARD_STATE : Setup Initial Board State" as SETUP_INITIAL_BOARD_STATE
+    state "PLACE_INITIAL_PIECES : Place Initial Pieces" as PLACE_INITIAL_PIECES
+    state "INITIALIZATION_COMPLETE : Initialization Complete" as INITIALIZATION_COMPLETE
+    state "TURN_START : Turn Start" as TURN_START
+    state "NO_VICTORY_NEXT_TURN : No Victory - Next Turn" as NO_VICTORY_NEXT_TURN
+    state "GAME_END_SHADOW_RING : Shadow Wins by Ring Corruption" as GAME_END_SHADOW_RING
+    state "GAME_END_FP_RING : Free Peoples Wins by Ring Destruction" as GAME_END_FP_RING
+    state "GAME_END_SHADOW_MILITARY : Shadow Wins by Military Victory" as GAME_END_SHADOW_MILITARY
+    state "GAME_END_FP_MILITARY : Free Peoples Wins by Military Victory" as GAME_END_FP_MILITARY
+    state "PHASE_1_RECOVER_AND_DRAW : Recover & Draw" as PHASE_1_RECOVER_AND_DRAW
+    state "PHASE_1_FP_DISCARD_CHECK : FP Hand Limit Check" as PHASE_1_FP_DISCARD_CHECK
+    state "PHASE_1_SP_DISCARD_CHECK : SP Hand Limit Check" as PHASE_1_SP_DISCARD_CHECK
+    state "PHASE_1_END : Phase 1 Complete" as PHASE_1_END
+    state "PHASE_2_FELLOWSHIP_START : Fellowship Phase Start" as PHASE_2_FELLOWSHIP_START
+    state "PHASE_2_END : Phase 2 Complete" as PHASE_2_END
+    state "PHASE_3_HUNT_ALLOCATION_START : Hunt Allocation Start" as PHASE_3_HUNT_ALLOCATION_START
+    state "PHASE_3_END : Phase 3 Complete" as PHASE_3_END
+    state "PHASE_4_ACTION_ROLL_START : Action Roll Start" as PHASE_4_ACTION_ROLL_START
+    state "PHASE_4_END : Phase 4 Complete" as PHASE_4_END
+    state "PHASE_5_ACTION_RESOLUTION_START : Phase 5 Start" as PHASE_5_ACTION_RESOLUTION_START
+    state "PHASE_5_FP_ACTION : FP Action" as PHASE_5_FP_ACTION
+    state "PHASE_5_FP_DIE_SELECTED : FP Die Selected" as PHASE_5_FP_DIE_SELECTED
+    state "PHASE_5_SP_ACTION : SP Action" as PHASE_5_SP_ACTION
+    state "PHASE_5_SP_DIE_SELECTED : SP Die Selected" as PHASE_5_SP_DIE_SELECTED
+    state "PHASE_5_RESOLVE_ACTION_FP : Resolve FP Action" as PHASE_5_RESOLVE_ACTION_FP
+    state "PHASE_5_RESOLVE_ACTION_SP : Resolve SP Action" as PHASE_5_RESOLVE_ACTION_SP
+    state "PHASE_5_AFTER_FP_PASS : After FP Pass" as PHASE_5_AFTER_FP_PASS
+    state "PHASE_5_AFTER_SP_PASS : After SP Pass" as PHASE_5_AFTER_SP_PASS
+    state "PHASE_5_DETERMINE_NEXT_ACTOR : Determine Next Actor" as PHASE_5_DETERMINE_NEXT_ACTOR
+    state "PHASE_5_CHECK_END : Check Phase 5 End" as PHASE_5_CHECK_END
+    state "PHASE_5_END : Phase 5 Complete" as PHASE_5_END
+    state "PHASE_6_VICTORY_CHECK : Victory Check" as PHASE_6_VICTORY_CHECK
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : TOGGLE_LOME
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : TOGGLE_WOME
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : TOGGLE_TREEBEARD
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : VIEW_FP
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : VIEW_SA
+    SETUP_GAME_OPTIONS --> PROMPT_GAME_INITIALIZATION : GAME_OPTIONS_CONFIRMED
+    SETUP_SOLO_SIDE_SELECTION --> PROMPT_GAME_INITIALIZATION : SOLO_CHOOSE_FP
+    SETUP_SOLO_SIDE_SELECTION --> PROMPT_GAME_INITIALIZATION : SOLO_CHOOSE_SHADOW
+    SETUP_SOLO_SIDE_SELECTION --> SETUP_GAME_OPTIONS : BACK_TO_GAME_OPTIONS
+    SETUP_CONNECTION_MODE --> SETUP_LOBBY_HOST : LOCAL_HOST_CREATE_GAME
+    SETUP_CONNECTION_MODE --> SETUP_CLIENT_CONNECT : LOCAL_JOIN_GAME
+    SETUP_CONNECTION_MODE --> SETUP_GAME_OPTIONS : BACK_TO_GAME_OPTIONS
+    SETUP_CLIENT_CONNECT --> SETUP_CLIENT_CONNECT : CLIENT_CONNECT_ATTEMPT
+    SETUP_CLIENT_CONNECT --> SETUP_LOBBY_CLIENT : CLIENT_CONNECT_SUCCESS
+    SETUP_CLIENT_CONNECT --> SETUP_CLIENT_CONNECT : CLIENT_CONNECT_FAILED
+    SETUP_CLIENT_CONNECT --> SETUP_CONNECTION_MODE : CLIENT_CANCEL_CONNECT
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : TOGGLE_LOME
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : TOGGLE_WOME
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : TOGGLE_TREEBEARD
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : SET_PLAYER_COUNT
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : PLAYER_READY
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : PLAYER_NOT_READY
+    SETUP_LOBBY_HOST --> SETUP_SIDE_ASSIGNMENT : HOST_OPEN_SIDE_ASSIGNMENT
+    SETUP_LOBBY_CLIENT --> SETUP_LOBBY_CLIENT : PLAYER_READY
+    SETUP_LOBBY_CLIENT --> SETUP_LOBBY_CLIENT : PLAYER_NOT_READY
+    SETUP_LOBBY_CLIENT --> SETUP_SIDE_ASSIGNMENT : HOST_OPEN_SIDE_ASSIGNMENT
+    SETUP_SIDE_ASSIGNMENT --> SETUP_SIDE_ASSIGNMENT : ASSIGN_PLAYER_TO_SIDE
+    SETUP_SIDE_ASSIGNMENT --> SETUP_SIDE_ASSIGNMENT : UNASSIGN_PLAYER_FROM_SIDE
+    SETUP_SIDE_ASSIGNMENT --> SETUP_SIDE_ASSIGNMENT : PLAYER_READY
+    SETUP_SIDE_ASSIGNMENT --> SETUP_SIDE_ASSIGNMENT : PLAYER_NOT_READY
+    SETUP_SIDE_ASSIGNMENT --> PROMPT_GAME_INITIALIZATION : HOST_START_GAME [allPlayersReady]
+    PROMPT_GAME_INITIALIZATION --> VALIDATE_SIDE_ASSIGNMENTS : AUTO
+    VALIDATE_SIDE_ASSIGNMENTS --> PERSIST_PLAYER_FACTION_ASSIGNMENTS : AUTO
+    PERSIST_PLAYER_FACTION_ASSIGNMENTS --> INITIALIZE_FP_RESOURCES : AUTO
+    INITIALIZE_FP_RESOURCES --> INITIALIZE_SP_RESOURCES : AUTO
+    INITIALIZE_SP_RESOURCES --> SETUP_INITIAL_BOARD_STATE : AUTO
+    SETUP_INITIAL_BOARD_STATE --> PLACE_INITIAL_PIECES : AUTO
+    PLACE_INITIAL_PIECES --> INITIALIZATION_COMPLETE : AUTO
+    INITIALIZATION_COMPLETE --> TURN_START : AUTO
+    TURN_START --> PHASE_1_RECOVER_AND_DRAW : AUTO
+    NO_VICTORY_NEXT_TURN --> TURN_START : AUTO
+    PHASE_1_RECOVER_AND_DRAW --> PHASE_1_FP_DISCARD_CHECK : AUTO
+    PHASE_1_FP_DISCARD_CHECK --> PHASE_1_SP_DISCARD_CHECK : FP_DISCARDS_DONE
+    PHASE_1_FP_DISCARD_CHECK --> PHASE_1_SP_DISCARD_CHECK : AUTO [FP_HAND_SIZE <= HAND_LIMIT]
+    PHASE_1_SP_DISCARD_CHECK --> PHASE_1_END : SP_DISCARDS_DONE
+    PHASE_1_SP_DISCARD_CHECK --> PHASE_1_END : AUTO [SP_HAND_SIZE <= HAND_LIMIT]
+    PHASE_1_END --> PHASE_2_FELLOWSHIP_START : AUTO
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : FP_DECLARE_FELLOWSHIP [FELLOWSHIP_IS_HIDDEN]
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : FP_HEAL_RINGBEARER [CAN_HEAL_RINGBEARER]
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : FP_ACTIVATE_NATION [CAN_ACTIVATE_NATION]
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : FP_CHANGE_GUIDE [HAS_VALID_GUIDE_OPTIONS]
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : GUIDE_SELECTED
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_END : FP_FELLOWSHIP_DECISIONS_READY
+    PHASE_2_END --> PHASE_3_HUNT_ALLOCATION_START : AUTO
+    PHASE_3_HUNT_ALLOCATION_START --> PHASE_3_END : SP_HUNT_ALLOCATION_DONE
+    PHASE_3_END --> PHASE_4_ACTION_ROLL_START : AUTO
+    PHASE_4_ACTION_ROLL_START --> PHASE_4_END : AUTO
+    PHASE_4_END --> PHASE_5_ACTION_RESOLUTION_START : AUTO
+    PHASE_5_ACTION_RESOLUTION_START --> PHASE_5_FP_ACTION : AUTO
+    PHASE_5_FP_ACTION --> PHASE_5_FP_DIE_SELECTED : PIECE_MOVED [PIECE_IS_FP_DIE_TO_AREA_152]
+    PHASE_5_FP_ACTION --> PHASE_5_AFTER_FP_PASS : FP_PASSES
+    PHASE_5_FP_DIE_SELECTED --> PHASE_5_FP_DIE_SELECTED : CHANGE_DIE_FACE [IS_WILL_OF_WEST_DIE]
+    PHASE_5_FP_DIE_SELECTED --> PHASE_5_FP_DIE_SELECTED : USE_ELVEN_RING [HAS_AVAILABLE_ELVEN_RING]
+    PHASE_5_FP_DIE_SELECTED --> PHASE_5_RESOLVE_ACTION_FP : ACTION_SELECTED
+    PHASE_5_SP_ACTION --> PHASE_5_SP_DIE_SELECTED : PIECE_MOVED [PIECE_IS_SP_DIE_TO_AREA_152]
+    PHASE_5_SP_ACTION --> PHASE_5_AFTER_SP_PASS : SP_PASSES
+    PHASE_5_SP_DIE_SELECTED --> PHASE_5_SP_DIE_SELECTED : USE_ELVEN_RING [HAS_AVAILABLE_ELVEN_RING]
+    PHASE_5_SP_DIE_SELECTED --> PHASE_5_RESOLVE_ACTION_SP : ACTION_SELECTED
+    PHASE_5_RESOLVE_ACTION_FP --> GAME_END_SHADOW_RING : AUTO [CORRUPTION >= 12]
+    PHASE_5_RESOLVE_ACTION_FP --> GAME_END_FP_RING : AUTO [FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]
+    PHASE_5_RESOLVE_ACTION_FP --> COMBAT_START : AUTO [COMBAT_FLAG == true]
+    PHASE_5_RESOLVE_ACTION_FP --> HUNT_START : AUTO [FELLOWSHIP_MOVED_FLAG == true]
+    PHASE_5_RESOLVE_ACTION_FP --> PHASE_5_DETERMINE_NEXT_ACTOR : AUTO
+    PHASE_5_RESOLVE_ACTION_SP --> GAME_END_SHADOW_RING : AUTO [CORRUPTION >= 12]
+    PHASE_5_RESOLVE_ACTION_SP --> GAME_END_FP_RING : AUTO [FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]
+    PHASE_5_RESOLVE_ACTION_SP --> COMBAT_START : AUTO [COMBAT_FLAG == true]
+    PHASE_5_RESOLVE_ACTION_SP --> HUNT_START : AUTO [FELLOWSHIP_MOVED_FLAG == true]
+    PHASE_5_RESOLVE_ACTION_SP --> PHASE_5_DETERMINE_NEXT_ACTOR : AUTO
+    PHASE_5_AFTER_FP_PASS --> PHASE_5_SP_ACTION : AUTO [SP_DICE_REMAINING > 0]
+    PHASE_5_AFTER_FP_PASS --> PHASE_5_CHECK_END : AUTO [SP_DICE_REMAINING == 0]
+    PHASE_5_AFTER_SP_PASS --> PHASE_5_FP_ACTION : AUTO [FP_DICE_REMAINING > 0]
+    PHASE_5_AFTER_SP_PASS --> PHASE_5_CHECK_END : AUTO [FP_DICE_REMAINING == 0]
+    PHASE_5_DETERMINE_NEXT_ACTOR --> PHASE_5_END : AUTO [FP_DICE_REMAINING == 0 AND SP_DICE_REMAINING == 0]
+    PHASE_5_DETERMINE_NEXT_ACTOR --> PHASE_5_FP_ACTION : AUTO [NEXT_ACTOR == 'FP']
+    PHASE_5_DETERMINE_NEXT_ACTOR --> PHASE_5_SP_ACTION : AUTO [NEXT_ACTOR == 'SP']
+    PHASE_5_CHECK_END --> PHASE_5_END : AUTO [(FP_DICE_REMAINING == 0 AND SP_DICE_REMAINING == 0) OR (FP_PASSED_FLAG == true AND SP_PASSED_FLAG == true)]
+    PHASE_5_CHECK_END --> PHASE_5_FP_ACTION : AUTO [FP_DICE_REMAINING > 0]
+    PHASE_5_CHECK_END --> PHASE_5_SP_ACTION : AUTO [SP_DICE_REMAINING > 0]
+    PHASE_5_END --> PHASE_6_VICTORY_CHECK : AUTO
+    PHASE_6_VICTORY_CHECK --> GAME_END_SHADOW_RING : AUTO [CORRUPTION >= 12]
+    PHASE_6_VICTORY_CHECK --> GAME_END_FP_RING : AUTO [FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]
+    PHASE_6_VICTORY_CHECK --> GAME_END_SHADOW_MILITARY : AUTO [SHADOW_VP >= 10]
+    PHASE_6_VICTORY_CHECK --> GAME_END_FP_MILITARY : AUTO [FP_VP >= 4]
+    PHASE_6_VICTORY_CHECK --> NO_VICTORY_NEXT_TURN : AUTO
+</div>
+<h2>States</h2>
+<table><thead><tr><th>State</th><th>Description</th><th>Entry Actions</th><th>Transitions</th></tr></thead><tbody>
+<tr id="SETUP_GAME_OPTIONS"><td><code>SETUP_GAME_OPTIONS</code><br>Game Options & Side Selection</td><td>Choose game options: toggle expansions (LOME, WOME) and the Treebeard feature. BASE is always enabled. Only the host (first client) may modify expansions. Players claim sides by viewing them (viewfp for Free Peoples, viewsa for Shadow). Sides can be password protected.
+</td><td>PROMPT_SETUP_GAME_OPTIONS</td><td><code>TOGGLE_LOME</code> → <a href="#SETUP_GAME_OPTIONS"><code>SETUP_GAME_OPTIONS</code></a><br><code>TOGGLE_WOME</code> → <a href="#SETUP_GAME_OPTIONS"><code>SETUP_GAME_OPTIONS</code></a><br><code>TOGGLE_TREEBEARD</code> → <a href="#SETUP_GAME_OPTIONS"><code>SETUP_GAME_OPTIONS</code></a><br><code>VIEW_FP</code> → <a href="#SETUP_GAME_OPTIONS"><code>SETUP_GAME_OPTIONS</code></a><br><code>VIEW_SA</code> → <a href="#SETUP_GAME_OPTIONS"><code>SETUP_GAME_OPTIONS</code></a><br><code>GAME_OPTIONS_CONFIRMED</code> → <a href="#PROMPT_GAME_INITIALIZATION"><code>PROMPT_GAME_INITIALIZATION</code></a></td></tr>
+<tr id="SETUP_SOLO_SIDE_SELECTION"><td><code>SETUP_SOLO_SIDE_SELECTION</code><br>Solo Side Selection</td><td>In a 1-player game, choose whether the local player controls the Free Peoples or the Shadow.
+</td><td>PROMPT_SETUP_SOLO_SIDE_SELECTION</td><td><code>SOLO_CHOOSE_FP</code> → <a href="#PROMPT_GAME_INITIALIZATION"><code>PROMPT_GAME_INITIALIZATION</code></a><br><code>SOLO_CHOOSE_SHADOW</code> → <a href="#PROMPT_GAME_INITIALIZATION"><code>PROMPT_GAME_INITIALIZATION</code></a><br><code>BACK_TO_GAME_OPTIONS</code> → <a href="#SETUP_GAME_OPTIONS"><code>SETUP_GAME_OPTIONS</code></a></td></tr>
+<tr id="SETUP_CONNECTION_MODE"><td><code>SETUP_CONNECTION_MODE</code><br>Connection Mode</td><td>Choose whether to host a new multiplayer game or connect to an existing one.
+</td><td>PROMPT_SETUP_CONNECTION_MODE</td><td><code>LOCAL_HOST_CREATE_GAME</code> → <a href="#SETUP_LOBBY_HOST"><code>SETUP_LOBBY_HOST</code></a><br><code>LOCAL_JOIN_GAME</code> → <a href="#SETUP_CLIENT_CONNECT"><code>SETUP_CLIENT_CONNECT</code></a><br><code>BACK_TO_GAME_OPTIONS</code> → <a href="#SETUP_GAME_OPTIONS"><code>SETUP_GAME_OPTIONS</code></a></td></tr>
+<tr id="SETUP_CLIENT_CONNECT"><td><code>SETUP_CLIENT_CONNECT</code><br>Join Game</td><td>Enter host connection info and join the multiplayer lobby.
+</td><td>PROMPT_SETUP_CLIENT_CONNECT</td><td><code>CLIENT_CONNECT_ATTEMPT</code> → <a href="#SETUP_CLIENT_CONNECT"><code>SETUP_CLIENT_CONNECT</code></a><br><code>CLIENT_CONNECT_SUCCESS</code> → <a href="#SETUP_LOBBY_CLIENT"><code>SETUP_LOBBY_CLIENT</code></a><br><code>CLIENT_CONNECT_FAILED</code> → <a href="#SETUP_CLIENT_CONNECT"><code>SETUP_CLIENT_CONNECT</code></a><br><code>CLIENT_CANCEL_CONNECT</code> → <a href="#SETUP_CONNECTION_MODE"><code>SETUP_CONNECTION_MODE</code></a></td></tr>
+<tr id="SETUP_LOBBY_HOST"><td><code>SETUP_LOBBY_HOST</code><br>Host Lobby</td><td>Host manages game options (LOME, WOME, Treebeard, player count) and waits for all players to join and ready up before side assignment.
+</td><td>PROMPT_SETUP_LOBBY_HOST</td><td><code>TOGGLE_LOME</code> → <a href="#SETUP_LOBBY_HOST"><code>SETUP_LOBBY_HOST</code></a><br><code>TOGGLE_WOME</code> → <a href="#SETUP_LOBBY_HOST"><code>SETUP_LOBBY_HOST</code></a><br><code>TOGGLE_TREEBEARD</code> → <a href="#SETUP_LOBBY_HOST"><code>SETUP_LOBBY_HOST</code></a><br><code>SET_PLAYER_COUNT</code> → <a href="#SETUP_LOBBY_HOST"><code>SETUP_LOBBY_HOST</code></a><br><code>PLAYER_READY</code> → <a href="#SETUP_LOBBY_HOST"><code>SETUP_LOBBY_HOST</code></a><br><code>PLAYER_NOT_READY</code> → <a href="#SETUP_LOBBY_HOST"><code>SETUP_LOBBY_HOST</code></a><br><code>HOST_OPEN_SIDE_ASSIGNMENT</code> → <a href="#SETUP_SIDE_ASSIGNMENT"><code>SETUP_SIDE_ASSIGNMENT</code></a></td></tr>
+<tr id="SETUP_LOBBY_CLIENT"><td><code>SETUP_LOBBY_CLIENT</code><br>Client Lobby</td><td>Client views the host's game options and waits until the host moves everyone into side assignment.
+</td><td>PROMPT_SETUP_LOBBY_CLIENT</td><td><code>PLAYER_READY</code> → <a href="#SETUP_LOBBY_CLIENT"><code>SETUP_LOBBY_CLIENT</code></a><br><code>PLAYER_NOT_READY</code> → <a href="#SETUP_LOBBY_CLIENT"><code>SETUP_LOBBY_CLIENT</code></a><br><code>HOST_OPEN_SIDE_ASSIGNMENT</code> → <a href="#SETUP_SIDE_ASSIGNMENT"><code>SETUP_SIDE_ASSIGNMENT</code></a></td></tr>
+<tr id="SETUP_SIDE_ASSIGNMENT"><td><code>SETUP_SIDE_ASSIGNMENT</code><br>Side Assignment</td><td>Assign players to Free Peoples and Shadow seats. All players must be ready before the host starts the game.
+</td><td>PROMPT_SETUP_SIDE_ASSIGNMENT</td><td><code>ASSIGN_PLAYER_TO_SIDE</code> → <a href="#SETUP_SIDE_ASSIGNMENT"><code>SETUP_SIDE_ASSIGNMENT</code></a><br><code>UNASSIGN_PLAYER_FROM_SIDE</code> → <a href="#SETUP_SIDE_ASSIGNMENT"><code>SETUP_SIDE_ASSIGNMENT</code></a><br><code>PLAYER_READY</code> → <a href="#SETUP_SIDE_ASSIGNMENT"><code>SETUP_SIDE_ASSIGNMENT</code></a><br><code>PLAYER_NOT_READY</code> → <a href="#SETUP_SIDE_ASSIGNMENT"><code>SETUP_SIDE_ASSIGNMENT</code></a><br><code>HOST_START_GAME</code> → <a href="#PROMPT_GAME_INITIALIZATION"><code>PROMPT_GAME_INITIALIZATION</code></a> [if allPlayersReady]</td></tr>
+<tr id="PROMPT_GAME_INITIALIZATION"><td><code>PROMPT_GAME_INITIALIZATION</code><br>Prompt Game Initialization</td><td>Display initialization message to players.</td><td>PROMPT_GAME_INITIALIZATION</td><td><code>AUTO</code> → <a href="#VALIDATE_SIDE_ASSIGNMENTS"><code>VALIDATE_SIDE_ASSIGNMENTS</code></a></td></tr>
+<tr id="VALIDATE_SIDE_ASSIGNMENTS"><td><code>VALIDATE_SIDE_ASSIGNMENTS</code><br>Validate Side Assignments</td><td>Ensure all players have valid faction assignments.</td><td>VALIDATE_SIDE_ASSIGNMENTS</td><td><code>AUTO</code> → <a href="#PERSIST_PLAYER_FACTION_ASSIGNMENTS"><code>PERSIST_PLAYER_FACTION_ASSIGNMENTS</code></a></td></tr>
+<tr id="PERSIST_PLAYER_FACTION_ASSIGNMENTS"><td><code>PERSIST_PLAYER_FACTION_ASSIGNMENTS</code><br>Persist Player Faction Assignments</td><td>Save player-to-faction assignments to database.</td><td>PERSIST_PLAYER_FACTION_ASSIGNMENTS</td><td><code>AUTO</code> → <a href="#INITIALIZE_FP_RESOURCES"><code>INITIALIZE_FP_RESOURCES</code></a></td></tr>
+<tr id="INITIALIZE_FP_RESOURCES"><td><code>INITIALIZE_FP_RESOURCES</code><br>Initialize FP Resources</td><td>Set up Free Peoples cards, dice, and starting resources.</td><td>INITIALIZE_FP_RESOURCES</td><td><code>AUTO</code> → <a href="#INITIALIZE_SP_RESOURCES"><code>INITIALIZE_SP_RESOURCES</code></a></td></tr>
+<tr id="INITIALIZE_SP_RESOURCES"><td><code>INITIALIZE_SP_RESOURCES</code><br>Initialize SP Resources</td><td>Set up Shadow cards, dice, and starting resources.</td><td>INITIALIZE_SP_RESOURCES</td><td><code>AUTO</code> → <a href="#SETUP_INITIAL_BOARD_STATE"><code>SETUP_INITIAL_BOARD_STATE</code></a></td></tr>
+<tr id="SETUP_INITIAL_BOARD_STATE"><td><code>SETUP_INITIAL_BOARD_STATE</code><br>Setup Initial Board State</td><td>Initialize regions, political tracks, and game state.</td><td>SETUP_INITIAL_BOARD_STATE</td><td><code>AUTO</code> → <a href="#PLACE_INITIAL_PIECES"><code>PLACE_INITIAL_PIECES</code></a></td></tr>
+<tr id="PLACE_INITIAL_PIECES"><td><code>PLACE_INITIAL_PIECES</code><br>Place Initial Pieces</td><td>Place all starting units, characters, and Fellowship on the board.</td><td>PLACE_INITIAL_PIECES</td><td><code>AUTO</code> → <a href="#INITIALIZATION_COMPLETE"><code>INITIALIZATION_COMPLETE</code></a></td></tr>
+<tr id="INITIALIZATION_COMPLETE"><td><code>INITIALIZATION_COMPLETE</code><br>Initialization Complete</td><td>Game initialization complete, ready to start Turn 1.</td><td>INITIALIZATION_COMPLETE</td><td><code>AUTO</code> → <a href="#TURN_START"><code>TURN_START</code></a></td></tr>
+<tr id="TURN_START"><td><code>TURN_START</code><br>Turn Start</td><td>Entry point for each game turn.</td><td>INCREMENT_TURN_COUNTER<br>RESET_PHASE_TRACKER</td><td><code>AUTO</code> → <a href="#PHASE_1_RECOVER_AND_DRAW"><code>PHASE_1_RECOVER_AND_DRAW</code></a></td></tr>
+<tr id="NO_VICTORY_NEXT_TURN"><td><code>NO_VICTORY_NEXT_TURN</code><br>No Victory - Next Turn</td><td>No victory detected; start next turn.</td><td>PROMPT_NO_VICTORY_START_NEXT_TURN</td><td><code>AUTO</code> → <a href="#TURN_START"><code>TURN_START</code></a></td></tr>
+<tr id="GAME_END_SHADOW_RING"><td><code>GAME_END_SHADOW_RING</code><br>Shadow Wins by Ring Corruption</td><td>Shadow wins by Ring-corruption.</td><td>PROMPT_GAME_OVER_SHADOW_RING</td><td></td></tr>
+<tr id="GAME_END_FP_RING"><td><code>GAME_END_FP_RING</code><br>Free Peoples Wins by Ring Destruction</td><td>Free Peoples wins by destroying the Ring.</td><td>PROMPT_GAME_OVER_FP_RING</td><td></td></tr>
+<tr id="GAME_END_SHADOW_MILITARY"><td><code>GAME_END_SHADOW_MILITARY</code><br>Shadow Wins by Military Victory</td><td>Shadow wins by military victory.</td><td>PROMPT_GAME_OVER_SHADOW_MILITARY</td><td></td></tr>
+<tr id="GAME_END_FP_MILITARY"><td><code>GAME_END_FP_MILITARY</code><br>Free Peoples Wins by Military Victory</td><td>Free Peoples wins by military victory.</td><td>PROMPT_GAME_OVER_FP_MILITARY</td><td></td></tr>
+<tr id="PHASE_1_RECOVER_AND_DRAW"><td><code>PHASE_1_RECOVER_AND_DRAW</code><br>Recover & Draw</td><td>Recover action dice and draw cards.</td><td>PROMPT_PHASE_1_START<br>RECOVER_ALL_FP_ACTION_DICE<br>RECOVER_ALL_SP_ACTION_DICE<br>FP_DRAW_CHARACTER_CARD<br>FP_DRAW_STRATEGY_CARD<br>SP_DRAW_CHARACTER_CARD<br>SP_DRAW_STRATEGY_CARD</td><td><code>AUTO</code> → <a href="#PHASE_1_FP_DISCARD_CHECK"><code>PHASE_1_FP_DISCARD_CHECK</code></a></td></tr>
+<tr id="PHASE_1_FP_DISCARD_CHECK"><td><code>PHASE_1_FP_DISCARD_CHECK</code><br>FP Hand Limit Check</td><td>Check FP hand size and discard if needed.</td><td>IF_FP_HAND_SIZE_GT_HAND_LIMIT_PROMPT_DISCARD</td><td><code>FP_DISCARDS_DONE</code> → <a href="#PHASE_1_SP_DISCARD_CHECK"><code>PHASE_1_SP_DISCARD_CHECK</code></a><br><code>AUTO</code> → <a href="#PHASE_1_SP_DISCARD_CHECK"><code>PHASE_1_SP_DISCARD_CHECK</code></a> [if FP_HAND_SIZE <= HAND_LIMIT]</td></tr>
+<tr id="PHASE_1_SP_DISCARD_CHECK"><td><code>PHASE_1_SP_DISCARD_CHECK</code><br>SP Hand Limit Check</td><td>Check SP hand size and discard if needed.</td><td>IF_SP_HAND_SIZE_GT_HAND_LIMIT_PROMPT_DISCARD</td><td><code>SP_DISCARDS_DONE</code> → <a href="#PHASE_1_END"><code>PHASE_1_END</code></a><br><code>AUTO</code> → <a href="#PHASE_1_END"><code>PHASE_1_END</code></a> [if SP_HAND_SIZE <= HAND_LIMIT]</td></tr>
+<tr id="PHASE_1_END"><td><code>PHASE_1_END</code><br>Phase 1 Complete</td><td>End of Phase 1.</td><td>PROMPT_PHASE_1_COMPLETE</td><td><code>AUTO</code> → <a href="#PHASE_2_FELLOWSHIP_START"><code>PHASE_2_FELLOWSHIP_START</code></a></td></tr>
+<tr id="PHASE_2_FELLOWSHIP_START"><td><code>PHASE_2_FELLOWSHIP_START</code><br>Fellowship Phase Start</td><td>FP may declare Fellowship, heal, activate nation, change Guide, etc.</td><td>PROMPT_PHASE_2_START<br>SHOW_FELLOWSHIP_STATUS<br>CHECK_FELLOWSHIP_OPTIONS</td><td><code>FP_DECLARE_FELLOWSHIP</code> → <a href="#PHASE_2_FELLOWSHIP_START"><code>PHASE_2_FELLOWSHIP_START</code></a> [if FELLOWSHIP_IS_HIDDEN]<br><code>FP_HEAL_RINGBEARER</code> → <a href="#PHASE_2_FELLOWSHIP_START"><code>PHASE_2_FELLOWSHIP_START</code></a> [if CAN_HEAL_RINGBEARER]<br><code>FP_ACTIVATE_NATION</code> → <a href="#PHASE_2_FELLOWSHIP_START"><code>PHASE_2_FELLOWSHIP_START</code></a> [if CAN_ACTIVATE_NATION]<br><code>FP_CHANGE_GUIDE</code> → <a href="#PHASE_2_FELLOWSHIP_START"><code>PHASE_2_FELLOWSHIP_START</code></a> [if HAS_VALID_GUIDE_OPTIONS]<br><code>GUIDE_SELECTED</code> → <a href="#PHASE_2_FELLOWSHIP_START"><code>PHASE_2_FELLOWSHIP_START</code></a><br><code>FP_FELLOWSHIP_DECISIONS_READY</code> → <a href="#PHASE_2_END"><code>PHASE_2_END</code></a></td></tr>
+<tr id="PHASE_2_END"><td><code>PHASE_2_END</code><br>Phase 2 Complete</td><td>End of Fellowship Phase.</td><td>PROMPT_PHASE_2_COMPLETE</td><td><code>AUTO</code> → <a href="#PHASE_3_HUNT_ALLOCATION_START"><code>PHASE_3_HUNT_ALLOCATION_START</code></a></td></tr>
+<tr id="PHASE_3_HUNT_ALLOCATION_START"><td><code>PHASE_3_HUNT_ALLOCATION_START</code><br>Hunt Allocation Start</td><td>Shadow allocates Eyes as Hunt dice.</td><td>PROMPT_PHASE_3_START<br>PROMPT_SP_ALLOCATE_HUNT_DICE</td><td><code>SP_HUNT_ALLOCATION_DONE</code> → <a href="#PHASE_3_END"><code>PHASE_3_END</code></a></td></tr>
+<tr id="PHASE_3_END"><td><code>PHASE_3_END</code><br>Phase 3 Complete</td><td>End of Hunt Allocation.</td><td>PROMPT_PHASE_3_COMPLETE</td><td><code>AUTO</code> → <a href="#PHASE_4_ACTION_ROLL_START"><code>PHASE_4_ACTION_ROLL_START</code></a></td></tr>
+<tr id="PHASE_4_ACTION_ROLL_START"><td><code>PHASE_4_ACTION_ROLL_START</code><br>Action Roll Start</td><td>Both players roll action dice.</td><td>PROMPT_PHASE_4_START<br>ROLL_FP_ACTION_DICE<br>ROLL_SP_ACTION_DICE<br>MOVE_ALL_EYE_RESULTS_TO_HUNT_BOX<br>APPLY_ELVEN_RING_EFFECTS_IF_ANY</td><td><code>AUTO</code> → <a href="#PHASE_4_END"><code>PHASE_4_END</code></a></td></tr>
+<tr id="PHASE_4_END"><td><code>PHASE_4_END</code><br>Phase 4 Complete</td><td>End of Action Roll.</td><td>PROMPT_PHASE_4_COMPLETE</td><td><code>AUTO</code> → <a href="#PHASE_5_ACTION_RESOLUTION_START"><code>PHASE_5_ACTION_RESOLUTION_START</code></a></td></tr>
+<tr id="PHASE_5_ACTION_RESOLUTION_START"><td><code>PHASE_5_ACTION_RESOLUTION_START</code><br>Phase 5 Start</td><td>Initialize alternating action resolution.</td><td>INIT_ACTION_TURN_ORDER_FP_FIRST<br>PROMPT_PHASE_5_START</td><td><code>AUTO</code> → <a href="#PHASE_5_FP_ACTION"><code>PHASE_5_FP_ACTION</code></a></td></tr>
+<tr id="PHASE_5_FP_ACTION"><td><code>PHASE_5_FP_ACTION</code><br>FP Action</td><td>Free Peoples drags an Action Die to area 152 (selected) or passes.</td><td>PROMPT_PHASE_5_FP_TO_ACT<br>SHOW_FP_DICE_POOL</td><td><code>PIECE_MOVED</code> → <a href="#PHASE_5_FP_DIE_SELECTED"><code>PHASE_5_FP_DIE_SELECTED</code></a> [if PIECE_IS_FP_DIE_TO_AREA_152]<br><code>FP_PASSES</code> → <a href="#PHASE_5_AFTER_FP_PASS"><code>PHASE_5_AFTER_FP_PASS</code></a></td></tr>
+<tr id="PHASE_5_FP_DIE_SELECTED"><td><code>PHASE_5_FP_DIE_SELECTED</code><br>FP Die Selected</td><td>FP has selected a die; determine available actions based on die face.</td><td>CHECK_IF_WILL_OF_WEST<br>CHECK_ELVEN_RINGS_AVAILABLE<br>DETERMINE_DIE_ACTIONS</td><td><code>CHANGE_DIE_FACE</code> → <a href="#PHASE_5_FP_DIE_SELECTED"><code>PHASE_5_FP_DIE_SELECTED</code></a> [if IS_WILL_OF_WEST_DIE]<br><code>USE_ELVEN_RING</code> → <a href="#PHASE_5_FP_DIE_SELECTED"><code>PHASE_5_FP_DIE_SELECTED</code></a> [if HAS_AVAILABLE_ELVEN_RING]<br><code>ACTION_SELECTED</code> → <a href="#PHASE_5_RESOLVE_ACTION_FP"><code>PHASE_5_RESOLVE_ACTION_FP</code></a></td></tr>
+<tr id="PHASE_5_SP_ACTION"><td><code>PHASE_5_SP_ACTION</code><br>SP Action</td><td>Shadow drags an Action Die to area 152 (selected) or passes.</td><td>PROMPT_PHASE_5_SP_TO_ACT<br>SHOW_SP_DICE_POOL</td><td><code>PIECE_MOVED</code> → <a href="#PHASE_5_SP_DIE_SELECTED"><code>PHASE_5_SP_DIE_SELECTED</code></a> [if PIECE_IS_SP_DIE_TO_AREA_152]<br><code>SP_PASSES</code> → <a href="#PHASE_5_AFTER_SP_PASS"><code>PHASE_5_AFTER_SP_PASS</code></a></td></tr>
+<tr id="PHASE_5_SP_DIE_SELECTED"><td><code>PHASE_5_SP_DIE_SELECTED</code><br>SP Die Selected</td><td>SP has selected a die; determine available actions based on die face.</td><td>CHECK_ELVEN_RINGS_AVAILABLE<br>DETERMINE_DIE_ACTIONS</td><td><code>USE_ELVEN_RING</code> → <a href="#PHASE_5_SP_DIE_SELECTED"><code>PHASE_5_SP_DIE_SELECTED</code></a> [if HAS_AVAILABLE_ELVEN_RING]<br><code>ACTION_SELECTED</code> → <a href="#PHASE_5_RESOLVE_ACTION_SP"><code>PHASE_5_RESOLVE_ACTION_SP</code></a></td></tr>
+<tr id="PHASE_5_RESOLVE_ACTION_FP"><td><code>PHASE_5_RESOLVE_ACTION_FP</code><br>Resolve FP Action</td><td>Resolve FP's chosen Action Die; may trigger Hunt/Combat or instant victory.</td><td>APPLY_FP_ACTION_DIE_EFFECT<br>DECREMENT_FP_DICE_REMAINING<br>CHECK_IF_FELLOWSHIP_MOVED_SET_FLAG<br>CHECK_IF_COMBAT_STARTED_SET_FLAG<br>UPDATE_GAME_STATE_FROM_FP_ACTION</td><td><code>AUTO</code> → <a href="#GAME_END_SHADOW_RING"><code>GAME_END_SHADOW_RING</code></a> [if CORRUPTION >= 12]<br><code>AUTO</code> → <a href="#GAME_END_FP_RING"><code>GAME_END_FP_RING</code></a> [if FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]<br><code>AUTO</code> → <a href="#COMBAT_START"><code>COMBAT_START</code></a> [if COMBAT_FLAG == true]<br><code>AUTO</code> → <a href="#HUNT_START"><code>HUNT_START</code></a> [if FELLOWSHIP_MOVED_FLAG == true]<br><code>AUTO</code> → <a href="#PHASE_5_DETERMINE_NEXT_ACTOR"><code>PHASE_5_DETERMINE_NEXT_ACTOR</code></a></td></tr>
+<tr id="PHASE_5_RESOLVE_ACTION_SP"><td><code>PHASE_5_RESOLVE_ACTION_SP</code><br>Resolve SP Action</td><td>Resolve SP's chosen Action Die; may trigger Hunt/Combat or instant victory.</td><td>APPLY_SP_ACTION_DIE_EFFECT<br>DECREMENT_SP_DICE_REMAINING<br>CHECK_IF_FELLOWSHIP_MOVED_SET_FLAG<br>CHECK_IF_COMBAT_STARTED_SET_FLAG<br>UPDATE_GAME_STATE_FROM_SP_ACTION</td><td><code>AUTO</code> → <a href="#GAME_END_SHADOW_RING"><code>GAME_END_SHADOW_RING</code></a> [if CORRUPTION >= 12]<br><code>AUTO</code> → <a href="#GAME_END_FP_RING"><code>GAME_END_FP_RING</code></a> [if FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]<br><code>AUTO</code> → <a href="#COMBAT_START"><code>COMBAT_START</code></a> [if COMBAT_FLAG == true]<br><code>AUTO</code> → <a href="#HUNT_START"><code>HUNT_START</code></a> [if FELLOWSHIP_MOVED_FLAG == true]<br><code>AUTO</code> → <a href="#PHASE_5_DETERMINE_NEXT_ACTOR"><code>PHASE_5_DETERMINE_NEXT_ACTOR</code></a></td></tr>
+<tr id="PHASE_5_AFTER_FP_PASS"><td><code>PHASE_5_AFTER_FP_PASS</code><br>After FP Pass</td><td>Evaluate next actor after FP passes.</td><td>SET_FP_PASSED_FLAG</td><td><code>AUTO</code> → <a href="#PHASE_5_SP_ACTION"><code>PHASE_5_SP_ACTION</code></a> [if SP_DICE_REMAINING > 0]<br><code>AUTO</code> → <a href="#PHASE_5_CHECK_END"><code>PHASE_5_CHECK_END</code></a> [if SP_DICE_REMAINING == 0]</td></tr>
+<tr id="PHASE_5_AFTER_SP_PASS"><td><code>PHASE_5_AFTER_SP_PASS</code><br>After SP Pass</td><td>Evaluate next actor after SP passes.</td><td>SET_SP_PASSED_FLAG</td><td><code>AUTO</code> → <a href="#PHASE_5_FP_ACTION"><code>PHASE_5_FP_ACTION</code></a> [if FP_DICE_REMAINING > 0]<br><code>AUTO</code> → <a href="#PHASE_5_CHECK_END"><code>PHASE_5_CHECK_END</code></a> [if FP_DICE_REMAINING == 0]</td></tr>
+<tr id="PHASE_5_DETERMINE_NEXT_ACTOR"><td><code>PHASE_5_DETERMINE_NEXT_ACTOR</code><br>Determine Next Actor</td><td>Decide whether FP or SP acts next, or Phase 5 ends.</td><td>CLEAR_ACTION_FLAGS</td><td><code>AUTO</code> → <a href="#PHASE_5_END"><code>PHASE_5_END</code></a> [if FP_DICE_REMAINING == 0 AND SP_DICE_REMAINING == 0]<br><code>AUTO</code> → <a href="#PHASE_5_FP_ACTION"><code>PHASE_5_FP_ACTION</code></a> [if NEXT_ACTOR == 'FP']<br><code>AUTO</code> → <a href="#PHASE_5_SP_ACTION"><code>PHASE_5_SP_ACTION</code></a> [if NEXT_ACTOR == 'SP']</td></tr>
+<tr id="PHASE_5_CHECK_END"><td><code>PHASE_5_CHECK_END</code><br>Check Phase 5 End</td><td>Check if alternating actions can end due to both passing or no dice.</td><td></td><td><code>AUTO</code> → <a href="#PHASE_5_END"><code>PHASE_5_END</code></a> [if (FP_DICE_REMAINING == 0 AND SP_DICE_REMAINING == 0) OR (FP_PASSED_FLAG == true AND SP_PASSED_FLAG == true)]<br><code>AUTO</code> → <a href="#PHASE_5_FP_ACTION"><code>PHASE_5_FP_ACTION</code></a> [if FP_DICE_REMAINING > 0]<br><code>AUTO</code> → <a href="#PHASE_5_SP_ACTION"><code>PHASE_5_SP_ACTION</code></a> [if SP_DICE_REMAINING > 0]</td></tr>
+<tr id="PHASE_5_END"><td><code>PHASE_5_END</code><br>Phase 5 Complete</td><td>End of Action Resolution.</td><td>PROMPT_PHASE_5_COMPLETE</td><td><code>AUTO</code> → <a href="#PHASE_6_VICTORY_CHECK"><code>PHASE_6_VICTORY_CHECK</code></a></td></tr>
+<tr id="PHASE_6_VICTORY_CHECK"><td><code>PHASE_6_VICTORY_CHECK</code><br>Victory Check</td><td>Check military victory and ring conditions.</td><td>PROMPT_PHASE_6_START<br>CHECK_MILITARY_VP_TOTALS<br>RECHECK_RING_CONDITIONS_FOR_SAFETY</td><td><code>AUTO</code> → <a href="#GAME_END_SHADOW_RING"><code>GAME_END_SHADOW_RING</code></a> [if CORRUPTION >= 12]<br><code>AUTO</code> → <a href="#GAME_END_FP_RING"><code>GAME_END_FP_RING</code></a> [if FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]<br><code>AUTO</code> → <a href="#GAME_END_SHADOW_MILITARY"><code>GAME_END_SHADOW_MILITARY</code></a> [if SHADOW_VP >= 10]<br><code>AUTO</code> → <a href="#GAME_END_FP_MILITARY"><code>GAME_END_FP_MILITARY</code></a> [if FP_VP >= 4]<br><code>AUTO</code> → <a href="#NO_VICTORY_NEXT_TURN"><code>NO_VICTORY_NEXT_TURN</code></a></td></tr>
+</tbody></table>
+<h2>Per-Phase Diagrams</h2>
+<h3>Turn 0 — Setup <small><code>TURN_0_SETUP</code></small></h3>
+<div class="mermaid">
+stateDiagram-v2
+    state "SETUP_GAME_OPTIONS : Game Options & Side Selection" as SETUP_GAME_OPTIONS
+    state "SETUP_SOLO_SIDE_SELECTION : Solo Side Selection" as SETUP_SOLO_SIDE_SELECTION
+    state "SETUP_CONNECTION_MODE : Connection Mode" as SETUP_CONNECTION_MODE
+    state "SETUP_CLIENT_CONNECT : Join Game" as SETUP_CLIENT_CONNECT
+    state "SETUP_LOBBY_HOST : Host Lobby" as SETUP_LOBBY_HOST
+    state "SETUP_LOBBY_CLIENT : Client Lobby" as SETUP_LOBBY_CLIENT
+    state "SETUP_SIDE_ASSIGNMENT : Side Assignment" as SETUP_SIDE_ASSIGNMENT
+    state "PROMPT_GAME_INITIALIZATION : Prompt Game Initialization" as PROMPT_GAME_INITIALIZATION
+    state "VALIDATE_SIDE_ASSIGNMENTS : Validate Side Assignments" as VALIDATE_SIDE_ASSIGNMENTS
+    state "PERSIST_PLAYER_FACTION_ASSIGNMENTS : Persist Player Faction Assignments" as PERSIST_PLAYER_FACTION_ASSIGNMENTS
+    state "INITIALIZE_FP_RESOURCES : Initialize FP Resources" as INITIALIZE_FP_RESOURCES
+    state "INITIALIZE_SP_RESOURCES : Initialize SP Resources" as INITIALIZE_SP_RESOURCES
+    state "SETUP_INITIAL_BOARD_STATE : Setup Initial Board State" as SETUP_INITIAL_BOARD_STATE
+    state "PLACE_INITIAL_PIECES : Place Initial Pieces" as PLACE_INITIAL_PIECES
+    state "INITIALIZATION_COMPLETE : Initialization Complete" as INITIALIZATION_COMPLETE
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : TOGGLE_LOME
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : TOGGLE_WOME
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : TOGGLE_TREEBEARD
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : VIEW_FP
+    SETUP_GAME_OPTIONS --> SETUP_GAME_OPTIONS : VIEW_SA
+    SETUP_GAME_OPTIONS --> PROMPT_GAME_INITIALIZATION : GAME_OPTIONS_CONFIRMED
+    SETUP_SOLO_SIDE_SELECTION --> PROMPT_GAME_INITIALIZATION : SOLO_CHOOSE_FP
+    SETUP_SOLO_SIDE_SELECTION --> PROMPT_GAME_INITIALIZATION : SOLO_CHOOSE_SHADOW
+    SETUP_SOLO_SIDE_SELECTION --> SETUP_GAME_OPTIONS : BACK_TO_GAME_OPTIONS
+    SETUP_CONNECTION_MODE --> SETUP_LOBBY_HOST : LOCAL_HOST_CREATE_GAME
+    SETUP_CONNECTION_MODE --> SETUP_CLIENT_CONNECT : LOCAL_JOIN_GAME
+    SETUP_CONNECTION_MODE --> SETUP_GAME_OPTIONS : BACK_TO_GAME_OPTIONS
+    SETUP_CLIENT_CONNECT --> SETUP_CLIENT_CONNECT : CLIENT_CONNECT_ATTEMPT
+    SETUP_CLIENT_CONNECT --> SETUP_LOBBY_CLIENT : CLIENT_CONNECT_SUCCESS
+    SETUP_CLIENT_CONNECT --> SETUP_CLIENT_CONNECT : CLIENT_CONNECT_FAILED
+    SETUP_CLIENT_CONNECT --> SETUP_CONNECTION_MODE : CLIENT_CANCEL_CONNECT
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : TOGGLE_LOME
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : TOGGLE_WOME
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : TOGGLE_TREEBEARD
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : SET_PLAYER_COUNT
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : PLAYER_READY
+    SETUP_LOBBY_HOST --> SETUP_LOBBY_HOST : PLAYER_NOT_READY
+    SETUP_LOBBY_HOST --> SETUP_SIDE_ASSIGNMENT : HOST_OPEN_SIDE_ASSIGNMENT
+    SETUP_LOBBY_CLIENT --> SETUP_LOBBY_CLIENT : PLAYER_READY
+    SETUP_LOBBY_CLIENT --> SETUP_LOBBY_CLIENT : PLAYER_NOT_READY
+    SETUP_LOBBY_CLIENT --> SETUP_SIDE_ASSIGNMENT : HOST_OPEN_SIDE_ASSIGNMENT
+    SETUP_SIDE_ASSIGNMENT --> SETUP_SIDE_ASSIGNMENT : ASSIGN_PLAYER_TO_SIDE
+    SETUP_SIDE_ASSIGNMENT --> SETUP_SIDE_ASSIGNMENT : UNASSIGN_PLAYER_FROM_SIDE
+    SETUP_SIDE_ASSIGNMENT --> SETUP_SIDE_ASSIGNMENT : PLAYER_READY
+    SETUP_SIDE_ASSIGNMENT --> SETUP_SIDE_ASSIGNMENT : PLAYER_NOT_READY
+    SETUP_SIDE_ASSIGNMENT --> PROMPT_GAME_INITIALIZATION : HOST_START_GAME [allPlayersReady]
+    PROMPT_GAME_INITIALIZATION --> VALIDATE_SIDE_ASSIGNMENTS : AUTO
+    VALIDATE_SIDE_ASSIGNMENTS --> PERSIST_PLAYER_FACTION_ASSIGNMENTS : AUTO
+    PERSIST_PLAYER_FACTION_ASSIGNMENTS --> INITIALIZE_FP_RESOURCES : AUTO
+    INITIALIZE_FP_RESOURCES --> INITIALIZE_SP_RESOURCES : AUTO
+    INITIALIZE_SP_RESOURCES --> SETUP_INITIAL_BOARD_STATE : AUTO
+    SETUP_INITIAL_BOARD_STATE --> PLACE_INITIAL_PIECES : AUTO
+    PLACE_INITIAL_PIECES --> INITIALIZATION_COMPLETE : AUTO
+    INITIALIZATION_COMPLETE --> TURN_START : AUTO
+</div>
+<h3>Turn Meta & End States <small><code>TURN_META</code></small></h3>
+<div class="mermaid">
+stateDiagram-v2
+    state "TURN_START : Turn Start" as TURN_START
+    state "NO_VICTORY_NEXT_TURN : No Victory - Next Turn" as NO_VICTORY_NEXT_TURN
+    state "GAME_END_SHADOW_RING : Shadow Wins by Ring Corruption" as GAME_END_SHADOW_RING
+    state "GAME_END_FP_RING : Free Peoples Wins by Ring Destruction" as GAME_END_FP_RING
+    state "GAME_END_SHADOW_MILITARY : Shadow Wins by Military Victory" as GAME_END_SHADOW_MILITARY
+    state "GAME_END_FP_MILITARY : Free Peoples Wins by Military Victory" as GAME_END_FP_MILITARY
+    TURN_START --> PHASE_1_RECOVER_AND_DRAW : AUTO
+    NO_VICTORY_NEXT_TURN --> TURN_START : AUTO
+</div>
+<h3>Phase 1 — Recover Dice & Draw Cards <small><code>PHASE_1</code></small></h3>
+<div class="mermaid">
+stateDiagram-v2
+    state "PHASE_1_RECOVER_AND_DRAW : Recover & Draw" as PHASE_1_RECOVER_AND_DRAW
+    state "PHASE_1_FP_DISCARD_CHECK : FP Hand Limit Check" as PHASE_1_FP_DISCARD_CHECK
+    state "PHASE_1_SP_DISCARD_CHECK : SP Hand Limit Check" as PHASE_1_SP_DISCARD_CHECK
+    state "PHASE_1_END : Phase 1 Complete" as PHASE_1_END
+    PHASE_1_RECOVER_AND_DRAW --> PHASE_1_FP_DISCARD_CHECK : AUTO
+    PHASE_1_FP_DISCARD_CHECK --> PHASE_1_SP_DISCARD_CHECK : FP_DISCARDS_DONE
+    PHASE_1_FP_DISCARD_CHECK --> PHASE_1_SP_DISCARD_CHECK : AUTO [FP_HAND_SIZE <= HAND_LIMIT]
+    PHASE_1_SP_DISCARD_CHECK --> PHASE_1_END : SP_DISCARDS_DONE
+    PHASE_1_SP_DISCARD_CHECK --> PHASE_1_END : AUTO [SP_HAND_SIZE <= HAND_LIMIT]
+    PHASE_1_END --> PHASE_2_FELLOWSHIP_START : AUTO
+</div>
+<h3>Phase 2 — Fellowship Phase <small><code>PHASE_2</code></small></h3>
+<div class="mermaid">
+stateDiagram-v2
+    state "PHASE_2_FELLOWSHIP_START : Fellowship Phase Start" as PHASE_2_FELLOWSHIP_START
+    state "PHASE_2_END : Phase 2 Complete" as PHASE_2_END
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : FP_DECLARE_FELLOWSHIP [FELLOWSHIP_IS_HIDDEN]
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : FP_HEAL_RINGBEARER [CAN_HEAL_RINGBEARER]
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : FP_ACTIVATE_NATION [CAN_ACTIVATE_NATION]
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : FP_CHANGE_GUIDE [HAS_VALID_GUIDE_OPTIONS]
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_FELLOWSHIP_START : GUIDE_SELECTED
+    PHASE_2_FELLOWSHIP_START --> PHASE_2_END : FP_FELLOWSHIP_DECISIONS_READY
+    PHASE_2_END --> PHASE_3_HUNT_ALLOCATION_START : AUTO
+</div>
+<h3>Phase 3 — Hunt Allocation <small><code>PHASE_3</code></small></h3>
+<div class="mermaid">
+stateDiagram-v2
+    state "PHASE_3_HUNT_ALLOCATION_START : Hunt Allocation Start" as PHASE_3_HUNT_ALLOCATION_START
+    state "PHASE_3_END : Phase 3 Complete" as PHASE_3_END
+    PHASE_3_HUNT_ALLOCATION_START --> PHASE_3_END : SP_HUNT_ALLOCATION_DONE
+    PHASE_3_END --> PHASE_4_ACTION_ROLL_START : AUTO
+</div>
+<h3>Phase 4 — Action Roll <small><code>PHASE_4</code></small></h3>
+<div class="mermaid">
+stateDiagram-v2
+    state "PHASE_4_ACTION_ROLL_START : Action Roll Start" as PHASE_4_ACTION_ROLL_START
+    state "PHASE_4_END : Phase 4 Complete" as PHASE_4_END
+    PHASE_4_ACTION_ROLL_START --> PHASE_4_END : AUTO
+    PHASE_4_END --> PHASE_5_ACTION_RESOLUTION_START : AUTO
+</div>
+<h3>Phase 5 — Action Resolution <small><code>PHASE_5</code></small></h3>
+<div class="mermaid">
+stateDiagram-v2
+    state "PHASE_5_ACTION_RESOLUTION_START : Phase 5 Start" as PHASE_5_ACTION_RESOLUTION_START
+    state "PHASE_5_FP_ACTION : FP Action" as PHASE_5_FP_ACTION
+    state "PHASE_5_FP_DIE_SELECTED : FP Die Selected" as PHASE_5_FP_DIE_SELECTED
+    state "PHASE_5_SP_ACTION : SP Action" as PHASE_5_SP_ACTION
+    state "PHASE_5_SP_DIE_SELECTED : SP Die Selected" as PHASE_5_SP_DIE_SELECTED
+    state "PHASE_5_RESOLVE_ACTION_FP : Resolve FP Action" as PHASE_5_RESOLVE_ACTION_FP
+    state "PHASE_5_RESOLVE_ACTION_SP : Resolve SP Action" as PHASE_5_RESOLVE_ACTION_SP
+    state "PHASE_5_AFTER_FP_PASS : After FP Pass" as PHASE_5_AFTER_FP_PASS
+    state "PHASE_5_AFTER_SP_PASS : After SP Pass" as PHASE_5_AFTER_SP_PASS
+    state "PHASE_5_DETERMINE_NEXT_ACTOR : Determine Next Actor" as PHASE_5_DETERMINE_NEXT_ACTOR
+    state "PHASE_5_CHECK_END : Check Phase 5 End" as PHASE_5_CHECK_END
+    state "PHASE_5_END : Phase 5 Complete" as PHASE_5_END
+    PHASE_5_ACTION_RESOLUTION_START --> PHASE_5_FP_ACTION : AUTO
+    PHASE_5_FP_ACTION --> PHASE_5_FP_DIE_SELECTED : PIECE_MOVED [PIECE_IS_FP_DIE_TO_AREA_152]
+    PHASE_5_FP_ACTION --> PHASE_5_AFTER_FP_PASS : FP_PASSES
+    PHASE_5_FP_DIE_SELECTED --> PHASE_5_FP_DIE_SELECTED : CHANGE_DIE_FACE [IS_WILL_OF_WEST_DIE]
+    PHASE_5_FP_DIE_SELECTED --> PHASE_5_FP_DIE_SELECTED : USE_ELVEN_RING [HAS_AVAILABLE_ELVEN_RING]
+    PHASE_5_FP_DIE_SELECTED --> PHASE_5_RESOLVE_ACTION_FP : ACTION_SELECTED
+    PHASE_5_SP_ACTION --> PHASE_5_SP_DIE_SELECTED : PIECE_MOVED [PIECE_IS_SP_DIE_TO_AREA_152]
+    PHASE_5_SP_ACTION --> PHASE_5_AFTER_SP_PASS : SP_PASSES
+    PHASE_5_SP_DIE_SELECTED --> PHASE_5_SP_DIE_SELECTED : USE_ELVEN_RING [HAS_AVAILABLE_ELVEN_RING]
+    PHASE_5_SP_DIE_SELECTED --> PHASE_5_RESOLVE_ACTION_SP : ACTION_SELECTED
+    PHASE_5_RESOLVE_ACTION_FP --> GAME_END_SHADOW_RING : AUTO [CORRUPTION >= 12]
+    PHASE_5_RESOLVE_ACTION_FP --> GAME_END_FP_RING : AUTO [FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]
+    PHASE_5_RESOLVE_ACTION_FP --> COMBAT_START : AUTO [COMBAT_FLAG == true]
+    PHASE_5_RESOLVE_ACTION_FP --> HUNT_START : AUTO [FELLOWSHIP_MOVED_FLAG == true]
+    PHASE_5_RESOLVE_ACTION_FP --> PHASE_5_DETERMINE_NEXT_ACTOR : AUTO
+    PHASE_5_RESOLVE_ACTION_SP --> GAME_END_SHADOW_RING : AUTO [CORRUPTION >= 12]
+    PHASE_5_RESOLVE_ACTION_SP --> GAME_END_FP_RING : AUTO [FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]
+    PHASE_5_RESOLVE_ACTION_SP --> COMBAT_START : AUTO [COMBAT_FLAG == true]
+    PHASE_5_RESOLVE_ACTION_SP --> HUNT_START : AUTO [FELLOWSHIP_MOVED_FLAG == true]
+    PHASE_5_RESOLVE_ACTION_SP --> PHASE_5_DETERMINE_NEXT_ACTOR : AUTO
+    PHASE_5_AFTER_FP_PASS --> PHASE_5_SP_ACTION : AUTO [SP_DICE_REMAINING > 0]
+    PHASE_5_AFTER_FP_PASS --> PHASE_5_CHECK_END : AUTO [SP_DICE_REMAINING == 0]
+    PHASE_5_AFTER_SP_PASS --> PHASE_5_FP_ACTION : AUTO [FP_DICE_REMAINING > 0]
+    PHASE_5_AFTER_SP_PASS --> PHASE_5_CHECK_END : AUTO [FP_DICE_REMAINING == 0]
+    PHASE_5_DETERMINE_NEXT_ACTOR --> PHASE_5_END : AUTO [FP_DICE_REMAINING == 0 AND SP_DICE_REMAINING == 0]
+    PHASE_5_DETERMINE_NEXT_ACTOR --> PHASE_5_FP_ACTION : AUTO [NEXT_ACTOR == 'FP']
+    PHASE_5_DETERMINE_NEXT_ACTOR --> PHASE_5_SP_ACTION : AUTO [NEXT_ACTOR == 'SP']
+    PHASE_5_CHECK_END --> PHASE_5_END : AUTO [(FP_DICE_REMAINING == 0 AND SP_DICE_REMAINING == 0) OR (FP_PASSED_FLAG == true AND SP_PASSED_FLAG == true)]
+    PHASE_5_CHECK_END --> PHASE_5_FP_ACTION : AUTO [FP_DICE_REMAINING > 0]
+    PHASE_5_CHECK_END --> PHASE_5_SP_ACTION : AUTO [SP_DICE_REMAINING > 0]
+    PHASE_5_END --> PHASE_6_VICTORY_CHECK : AUTO
+</div>
+<h3>Phase 6 — Victory Check <small><code>PHASE_6</code></small></h3>
+<div class="mermaid">
+stateDiagram-v2
+    state "PHASE_6_VICTORY_CHECK : Victory Check" as PHASE_6_VICTORY_CHECK
+    PHASE_6_VICTORY_CHECK --> GAME_END_SHADOW_RING : AUTO [CORRUPTION >= 12]
+    PHASE_6_VICTORY_CHECK --> GAME_END_FP_RING : AUTO [FELLOWSHIP_AT_CRACK_OF_DOOM_AND_CORRUPTION_LT_12]
+    PHASE_6_VICTORY_CHECK --> GAME_END_SHADOW_MILITARY : AUTO [SHADOW_VP >= 10]
+    PHASE_6_VICTORY_CHECK --> GAME_END_FP_MILITARY : AUTO [FP_VP >= 4]
+    PHASE_6_VICTORY_CHECK --> NO_VICTORY_NEXT_TURN : AUTO
+</div>
+</body>
+</html>

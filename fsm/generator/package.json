@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "build-fsm": "node build_fsm.js"
+  },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  }
+}

@@ -1,0 +1,301 @@
+# WOTR-GANDALF .gitignore
+
+# ============================================
+# Database Files
+# ============================================
+# SQLite database (user-specific game data)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+wotr_game.db
+
+# ============================================
+# Java Compiled Files
+# ============================================
+*.class
+# Allow specific working JAR
+!WOTR-GANDALF.jar
+# Ignore other JARs
+*.jar
+target/*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+
+# Package Files
+*.zip
+*.tar.gz
+*.rar
+
+# Virtual machine crash logs
+replay_pid*
+
+# ============================================
+# Build Directories
+# ============================================
+/target/
+/build/
+/out/
+/bin/
+/dist/
+
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# ============================================
+# IDE Files
+# ============================================
+# VSCode / Windsurf
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata
+.recommenders
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+# ============================================
+# Game-Specific Files
+# ============================================
+# Log files (game action logs)
+logs/*.log
+logs/*.txt
+logs/*.wotr
+logs/*
+
+# User preferences (game settings)
+wotr_preferences
+wotr_preferences.*
+!wotr_preferences.example
+
+# Backup files
+*.bak
+*_backup
+*_old
+
+# Custom mods (optional - uncomment if you don't want to track user mods)
+# custom/images/*
+# custom/*.txt
+# custom/*.mod
+
+# ============================================
+# OS-Specific Files
+# ============================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# Dependencies (if using manual JAR management)
+# ============================================
+# Keep lib/ directory structure but ignore downloaded JARs
+lib/*.jar
+!lib/.gitkeep
+
+# ============================================
+# FSM Server Files
+# ============================================
+fsm/server/node_modules/
+generator/node_modules/
+fsm/wotr_fsm_diagrams.md
+fsm/wotr_fsm_prompts.md
+fsm/wotr_fsm_table.md
+fsm/wotr_fsm_state_ids.json
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.cache
+*.log
+temp_extract/
+temp_sources.txt
+META-INF/
+db_test_output.txt
+*_test_output.txt
+
+# ============================================
+# Migration & Testing
+# ============================================
+# Test output
+test-output/
+*.test
+
+# Migration artifacts
+migration_log.txt
+migration_backup/
+
+# ============================================
+# Documentation (Keep these)
+# ============================================
+# Keep all markdown files
+!*.md
+!README.md
+!TODO-DATABASE.md
+!IMPLEMENTATION-GUIDE*.md
+archive/*.md
+
+# Keep documentation
+!docs/
+!docs/**
+
+# ============================================
+# Data Files (Keep these in version control)
+# ============================================
+# Keep JSON data files - these are source data
+!data/
+!data/*.json
+
+# Keep image assets
+!images/
+!images/**
+!2ndedition/
+!base/
+!expansion2/
+!b5a/
+!wome/
+!soundPack/
+
+# ============================================
+# Configuration Files (Keep these)
+# ============================================
+# Keep example configurations
+!*.example
+!*.template
+
+# Keep properties files (localization)
+!messages.properties
+!messages.properties.bak
+
+# ============================================
+# Development
+# ============================================
+# Debug files
+*.log
+debug.txt
+debug/
+
+# Profiler output
+*.hprof
+
+# Package manager locks (if using)
+package-lock.json
+yarn.lock
+
+# README.pdf
+README.pdf
+docs/archive
+fsm/wotr_fsm_diagrams.md
+fsm/wotr_fsm_prompts.md
+fsm/wotr_fsm_table.md
+fsm/wotr_fsm.json
+fsm/generator/package-lock.json
+fsm/generator/node_modules
+data/bits_array_base-T.json
+data/bits_array_base.json
+data/bits_array_lome-T.json
+data/bits_array_lome.json
+data/bits_array_wome_lome.json
+data/bits_array_wome.json
+src/main/resources/database/imports/\[T}.txt
+data/bits_array_expansion2\[WLT].json
+scripts/bitInits.java.backup
+data/bits_array_base\[WT].json
+data/bits_array_base2.json
+data/bits_array_base2\[T].json
+data/bits_array_expansion2\[L].json
+data/bits_array_expansion2\[LT].json
+data/bits_array_base2_bitinit.json
+data/bits_array_base2_db.json
+data/bits_array_base\[WT]_bitinit.json
+data/bits_array_base2\[T]_bitinit.json
+data/bits_array_expansion2\[L]_bitinit.json
+data/bits_array_expansion2\[LT]_bitinit.json
+data/bits_array_expansion2\[WLT]_bitinit.json
+data/bits_array_expansion2\[WLT]_db.json
+data/bits_array_base\[WT]_db.json
+docs/ALL_AREA_CONSTANTS_VERIFIED.java
+docs/AREA_CONSTANTS_ORDERED.md
+docs/GAME_KILLGROUP_REFACTORING.md
+docs/REGION_CONSTANTS_VERIFIED.java
+data/bits_array_expansion2\[L]_db.json
+data/bits_array_expansion2\[LT]_db.json

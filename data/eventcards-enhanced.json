@@ -1,0 +1,154 @@
+[
+  {
+    "cardNumber": "1/24",
+    "event": {
+      "title": "Elven Cloaks",
+      "effectText": "The \"Elven Cloaks\" special Hunt tile [0] is now in play. Add the tile to the Hunt Pool when the Fellowship is on the Mordor Track.",
+      "initiative": null,
+      "conditions": null
+    },
+    "combatTitle": "It is a Gift",
+    "combatId": "a1b2c3d4-e5f6-4g7h-8i9j-k0l1m2n3o4p5",
+    "side": "freePeoples",
+    "type": "character",
+    "effects": [
+      {
+        "name": "Elven Cloaks",
+        "triggers": [
+          {
+            "event": "playEventCard",
+            "conditions": {
+              "card.cardNumber": "1/24",
+              "card.side": "freePeoples"
+            },
+            "actions": [
+              {
+                "type": "addHuntTile",
+                "params": {
+                  "name": "Elven Cloaks",
+                  "value": 0,
+                  "addWhen": "mordorTrack"
+                }
+              }
+            ],
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "cardNumber": "2/24",
+    "event": {
+      "title": "Elven Rope",
+      "effectText": "The \"Elven Rope\" special Hunt tile [0] is now in play. Add the tile to the Hunt Pool when the Fellowship is on the Mordor Track.",
+      "initiative": null,
+      "conditions": null
+    },
+    "combatTitle": "It is a Gift",
+    "combatId": "a1b2c3d4-e5f6-4g7h-8i9j-k0l1m2n3o4p5",
+    "side": "freePeoples",
+    "type": "character",
+    "effects": [
+      {
+        "name": "Elven Rope",
+        "triggers": [
+          {
+            "event": "playEventCard",
+            "conditions": {
+              "card.cardNumber": "2/24",
+              "card.side": "freePeoples"
+            },
+            "actions": [
+              {
+                "type": "addHuntTile",
+                "params": {
+                  "name": "Elven Rope",
+                  "value": 0,
+                  "addWhen": "mordorTrack"
+                }
+              }
+            ],
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "cardNumber": "3/24",
+    "event": {
+      "title": "Phial of Galadriel",
+      "effectText": "The \"Phial of Galadriel\" special Hunt tile [-2] is now in play. Add the tile to the Hunt Pool when the Fellowship is on the Mordor Track.",
+      "initiative": null,
+      "conditions": null
+    },
+    "combatTitle": "It is a Gift",
+    "combatId": "a1b2c3d4-e5f6-4g7h-8i9j-k0l1m2n3o4p5",
+    "side": "freePeoples",
+    "type": "character",
+    "effects": [
+      {
+        "name": "Phial of Galadriel",
+        "triggers": [
+          {
+            "event": "playEventCard",
+            "conditions": {
+              "card.cardNumber": "3/24",
+              "card.side": "freePeoples"
+            },
+            "actions": [
+              {
+                "type": "addHuntTile",
+                "params": {
+                  "name": "Phial of Galadriel",
+                  "value": -2,
+                  "addWhen": "mordorTrack"
+                }
+              }
+            ],
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "cardNumber": "4/24",
+    "event": {
+      "title": "Sméagol Helps Nice Master",
+      "effectText": "The \"Sméagol Helps Nice Master\" special Hunt tile [-1] is now in play. Add the tile to the Hunt Pool when the Fellowship is on the Mordor Track.",
+      "initiative": null,
+      "conditions": null
+    },
+    "combatTitle": "It is a Gift",
+    "combatId": "a1b2c3d4-e5f6-4g7h-8i9j-k0l1m2n3o4p5",
+    "side": "freePeoples",
+    "type": "character",
+    "effects": [
+      {
+        "name": "Sméagol Helps Nice Master",
+        "triggers": [
+          {
+            "event": "playEventCard",
+            "conditions": {
+              "card.cardNumber": "4/24",
+              "card.side": "freePeoples"
+            },
+            "actions": [
+              {
+                "type": "addHuntTile",
+                "params": {
+                  "name": "Sméagol Helps Nice Master",
+                  "value": -1,
+                  "addWhen": "mordorTrack"
+                }
+              }
+            ],
+            "optional": false
+          }
+        ]
+      }
+    ]
+  }
+]

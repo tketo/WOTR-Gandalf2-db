@@ -161,16 +161,10 @@ public class FsmConnection extends Thread {
     }
     
     /**
-     * Update the FSM Phase Panel with phase information
+     * Update status with phase information (logs to console)
      */
     private void updateStatusBar(String message) {
-        // Update FSM Phase Panel with phase info
-        if (game.controls.fsmPhasePanel != null) {
-            final String phaseMessage = message;
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                game.controls.fsmPhasePanel.updatePhaseInfo(phaseMessage);
-            });
-        }
+        System.out.println("[FSM] Phase: " + message);
     }
     
     /**
@@ -197,13 +191,6 @@ public class FsmConnection extends Thread {
         }
         
         game.interpreter.execute(message.toString());
-        
-        // Update FSM Phase Panel with valid events
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            if (game.controls.fsmPhasePanel != null) {
-                game.controls.fsmPhasePanel.updateValidEvents(validEvents);
-            }
-        });
     }
     
     /**

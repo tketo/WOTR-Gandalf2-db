@@ -251,6 +251,10 @@ class CtrlButtonHandler implements ActionListener {
             this.game.translate = "";
         } else if (e.getActionCommand().startsWith("translateon")) {
             this.game.translate = Game.prefs.translation.substring(Game.prefs.translation.indexOf("[") + 1, Game.prefs.translation.indexOf("]"));
+        } else if (e.getActionCommand().equals("DwarvenRingRules")) {
+            actionPerformed_DwarvenRingRules();
+        } else if (e.getActionCommand().contains("AddDwarvenRings")) {
+            actionPerformed_AddDwarvenRings(e.getActionCommand().substring(e.getActionCommand().indexOf("(") + 1, e.getActionCommand().indexOf(")")));
         } else if (e.getActionCommand().startsWith("setBalrog")) {
             Game.versionno = Messages.getString("Controls.190");
             JOptionPane.showMessageDialog(Game.win, Messages.getString("Controls.191"));
@@ -2375,5 +2379,17 @@ class CtrlButtonHandler implements ActionListener {
             return;
         }
         JOptionPane.showMessageDialog(Game.win, Messages.getString("Controls.121"));
+    }
+    private static void actionPerformed_DwarvenRingRules() {
+        try {
+            Desktop.getDesktop().open(new File("Dwarven_Rings_Tournament_Rules.pdf"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void actionPerformed_AddDwarvenRings(String count) {
+        int numRings = Integer.parseInt(count);
+        this.game.talker.enqueue("$" + Game.prefs.nick + Messages.getKeyString("Controls.201") + numRings + Messages.getKeyString("Controls.202") + " ");
     }
 }

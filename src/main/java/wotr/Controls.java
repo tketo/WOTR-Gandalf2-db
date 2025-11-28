@@ -312,16 +312,16 @@ public class Controls extends JPanel {
         jMenu.add(item);
         item.setActionCommand("disconnect");
         item.addActionListener(this.cbh);
-        jMenu.addSeparator();
+        // jMenu.addSeparator();
         
-        // FSM server connection menu items
-        item = new JMenuItem("Connect to FSM Server...");
-        jMenu.add(item);
-        item.setActionCommand("fsm_connect");
-        item.addActionListener(this.cbh);
-        item = new JMenuItem("Disconnect from FSM Server");
-        jMenu.add(item);
-        item.setActionCommand("fsm_disconnect");
+        // // FSM server connection menu items
+        // item = new JMenuItem("Connect to FSM Server...");
+        // jMenu.add(item);
+        // item.setActionCommand("fsm_connect");
+        // item.addActionListener(this.cbh);
+        // item = new JMenuItem("Disconnect from FSM Server");
+        // jMenu.add(item);
+        // item.setActionCommand("fsm_disconnect");
         item.addActionListener(this.cbh);
         jMenu.addSeparator();
         
@@ -753,6 +753,22 @@ public class Controls extends JPanel {
         item.setActionCommand("connectsoundoff");
         item.addActionListener(this.cbh);
         helpMenu.addSeparator();
+        JMenu dwarvenRingsMenu = new JMenu(Messages.getString("Controls.171"));
+        helpMenu.add(dwarvenRingsMenu);
+        item = new JMenuItem(Messages.getString("Controls.180"));
+        item.setActionCommand("DwarvenRingRules");
+        item.addActionListener(this.cbh);
+        dwarvenRingsMenu.add(item);
+        item = new JMenuItem(Messages.getString("Controls.188"));
+        item.setActionCommand("AddDwarvenRings(1)");
+        item.addActionListener(this.cbh);
+        dwarvenRingsMenu.add(item);
+        for (int dwarvenRingCount = 2; dwarvenRingCount < 8; ++dwarvenRingCount) {
+            item = new JMenuItem(Messages.getString("Controls.192") + dwarvenRingCount + Messages.getString("Controls.193"));
+            item.setActionCommand("AddDwarvenRings(" + dwarvenRingCount + ")");
+            item.addActionListener(this.cbh);
+            dwarvenRingsMenu.add(item);
+        }
         item = new JMenuItem(Messages.getString("Controls.123"));
         helpMenu.add(item);
         item.setActionCommand("setBalrog");
@@ -782,10 +798,10 @@ public class Controls extends JPanel {
             this.chat = new Chat(Game.prefs.chatWidth, Game.prefs.chatHeight, this.game);
         }
         add(this.chat);
-        
+
         // FSM Phase Panel
-        this.fsmPhasePanel = new FsmPhasePanel(this.game);
-        add(this.fsmPhasePanel);
+        // this.fsmPhasePanel = new FsmPhasePanel(this.game);
+        // add(this.fsmPhasePanel);
     }
 
     /* access modifiers changed from: package-private */

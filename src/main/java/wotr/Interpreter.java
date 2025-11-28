@@ -421,7 +421,10 @@ public class Interpreter implements ActionListener {
                     if (token.equals("secureDiceConfirm")) {
                         exSecureDiceRollConfirm(cmd4, nick);
                     }
-                }
+                    if (token.startsWith(Messages.getString("Interpreter.38"))) {
+                        exAddDwarvenRings(cmd4);
+                    }
+   }
             }
         } else if (cmd2.length() > 0 && cmd2.charAt(0) == '<') {
             specialCommand(cmd2);
@@ -2595,6 +2598,40 @@ public class Interpreter implements ActionListener {
         if (Game.prefs.flashOptional > 0 && this.westpassFlashes > (Game.prefs.flashOptional * 2) - 1) {
             this.goblinpasswestTimer = false;
             this.westpassFlashes = 0;
+        }
+    }
+    
+    /**
+     * Adds Dwarven Ring pieces to the game selection.
+     * @param cmd The command string (e.g., "adds 4 Dwarven Ring(s) ")
+     */
+    private void exAddDwarvenRings(String cmd) {
+        // Parse the number of rings from the command
+        // cmd format: "adds 4 Dwarven Ring(s) " - skip "adds " then parse number
+        int numRings = 1;
+        try {
+            // Skip past "adds " to get to the number
+            int firstSpace = cmd.indexOf(" ");
+            if (firstSpace > 0) {
+                String afterAdds = cmd.substring(firstSpace + 1); // "4 Dwarven Ring(s) "
+                int secondSpace = afterAdds.indexOf(" ");
+                if (secondSpace > 0) {
+                    numRings = Integer.parseInt(afterAdds.substring(0, secondSpace));
+                } else {
+                    numRings = Integer.parseInt(afterAdds.trim());
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Error parsing dwarven ring count: " + cmd);
+            return;
+        }
+
+        // Add the dwarven rings to the game selection using Chit class
+        String dwarvenRingType = Messages.getString("DwarvenRing.0");
+        for (int i = 0; i < numRings; i++) {
+            String imagePath = Messages.getLanguageLocation("images/DwarvenRing" + String.format("%01d", i + 1) + ".png");
+            Chit dwarvenRing = new Chit(Game.areas[114], dwarvenRingType, imagePath);
+            this.game.selection.addPiece(dwarvenRing);
         }
     }
 }
